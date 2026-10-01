@@ -1,6 +1,8 @@
 # SIEM event (proposal)
 
-*Status: proposal for Dylan's review (2026-10-01). Nothing here is implemented yet.*
+*Status: deferred to Phase 5 (decided 2026-10-01). This is an unreviewed proposal and nothing
+here is implemented. The decisions at the end are still open. Until then, `squeaktest analyze
+--json` gives the result fields without the SIEM-specific source and identity fields.*
 
 `squeaktest analyze --jsonl` (step 7) will emit one event per analyzed recording, shaped for a
 Log Analytics custom table such as `VoiceDeepfake_CL`. It follows promptbadger's conventions,

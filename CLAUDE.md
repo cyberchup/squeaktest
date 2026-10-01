@@ -110,7 +110,7 @@ This field moves fast, so do not rely on memory. Research the current landscape 
 Then stop and get Dylan's sign-off.
 
 **Phase 1 (v0.1): CLI inference.**
-`squeaktest analyze clip.wav` loads and validates the file, chunks it into windows, scores each window, and prints an aggregate score, a band, and per-segment scores. Include JSON output and a SIEM-style event.
+`squeaktest analyze clip.wav` loads and validates the file, chunks it into windows, scores each window, and prints an aggregate score, a band, and per-segment scores. Include plain JSON output. (The SIEM event was moved to Phase 5 on 2026-10-01.)
 - Set up CI (ruff, pytest, pip-audit, bandit) with the first code commit.
 - Build the input security into `audio.py` now, since the CLI is an input surface too: content sniffing, size and duration limits, decode timeouts. Test with synthetic fixtures.
 - Label scores as uncalibrated until Phase 2 calibrates them.
@@ -132,7 +132,7 @@ FastAPI with a Gradio UI for upload, score, band, and segment timeline. Every se
 README badges, an HF Spaces deployment, then point squeaktest.com at it.
 
 **Phase 5: Stretch goals.**
-Spectrogram and attention visualization, an ensemble of models, a full robustness suite (noise, reverb and more codecs), the adversarial-evasion section of `docs/threat-model.md`, and Microsoft Sentinel content (analytics rule and hunting KQL over the JSON events), as in promptbadger.
+Spectrogram and attention visualization, an ensemble of models, a full robustness suite (noise, reverb and more codecs), the adversarial-evasion section of `docs/threat-model.md`, and SIEM integration as in promptbadger: the SIEM event (proposal and open decisions in `docs/siem-event.md`) plus Microsoft Sentinel content (analytics rule and hunting KQL over those events).
 
 ## Evaluation discipline
 
