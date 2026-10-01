@@ -223,6 +223,53 @@ loading or a one-time conversion.
 
 **Impact:** about 3 seconds of hashing per load for the 1.27 GB file.
 
+## D14. Provisional bands: likely synthetic at 0.90 and above, likely genuine below 0.50 (step 7)
+
+**Decision:** `band_for` maps the raw clip score to *Likely synthetic* (0.90 and above),
+*Uncertain* (0.50 to 0.90) or *Likely genuine* (below 0.50). No score maps to *Not assessed*.
+
+**Why:** these bands sit on an uncalibrated score (D9), so no threshold can be justified with
+data yet. NII's model card puts this model's EER threshold anywhere from 0.62 (In-the-Wild) to
+0.99 (Deepfake-Eval-2024). On some real-world audio, then, genuine clips score up to 0.99. A
+high bar for "likely synthetic" and a wide uncertain middle state that honestly: most of the
+range doesn't support a confident call yet.
+
+**Impact:** some real deepfakes will land in *Uncertain* (missed as alerts), and some genuine
+recordings, especially compressed or non-English ones, can still reach *Likely synthetic*.
+Every output says the bands are provisional.
+
+**Revisit:** Phase 2 replaces both thresholds with values chosen on the In-the-Wild dev split
+at a target false-positive rate, after calibration.
+
+## D15. Accept 15-second CLI startup; cap batches at 8 windows (step 7)
+
+**Measured on Dylan's machine** (i5-11600K, RTX 3050, one minute of audio = 29 windows):
+
+| Setting | Per 4 s window | Per audio minute |
+|---|---|---|
+| GPU | 40 ms | 1.2 s (peak GPU memory 1.9 GB) |
+| CPU, 6 cores | 492 ms | 14.3 s |
+| CPU, 2 threads (free-tier stand-in) | 854 ms | 24.8 s |
+
+Loading the model takes 2-3 s. Importing PyTorch and `transformers` takes about 15 s on
+Windows, most of it `transformers` loading modules squeaktest never uses.
+
+**Decisions:**
+- **Keep `transformers` despite the startup cost.** A long-running web app pays it once. The
+  alternative, our own wav2vec 2.0 code, would remove the cost but leave us maintaining the
+  architecture.
+- **Cap batches at 8 windows.** The first convolution layer alone needs about 26 MB per window,
+  so one batch for a 5-minute clip would need about 4 GB for that layer.
+- **Build the model on PyTorch's meta device and verify the exact bytes that are loaded.**
+  Random initialization was taking 20 s, and loading the bytes that were verified closes the
+  gap between checking the file and reading it.
+
+**Impact on hosting:** on the free 2-vCPU tier, expect at least 25 s per minute of audio,
+probably more on shared CPUs. A 60-second cap on the hosted demo keeps waits under about a
+minute; free ZeroGPU would bring it near 1 s (research section 4.2).
+
+**Revisit:** startup time, if hosting moves to something that starts per request.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)

@@ -8,9 +8,27 @@
 
 ## Status
 
-Early development (Phase 1: command-line tool). In place: the hardened audio loader, silence detection, windowed scoring, and the detection model. There is no command-line interface yet, and no accuracy claims are made until evaluation results are published here. Scores are currently uncalibrated.
+Early development. The command-line tool works (Phase 1). Accuracy hasn't been measured yet (Phase 2), so no accuracy claims are made, scores are uncalibrated, and the bands are provisional. One known weakness is already documented: non-speech sounds such as tones and music can get confident "synthetic" scores ([K1](docs/decisions.md#k1-non-speech-audio-gets-confident-fake-scores-found-in-step-5)).
 
 The research behind the model and dataset choices is in [docs/research.md](docs/research.md), and every design choice, with its effect on missed fakes and false positives, is in [docs/decisions.md](docs/decisions.md), along with known gaps.
+
+## Usage
+
+```bash
+uv run squeaktest fetch-model             # one-time: download the model (1.27 GB, asks first)
+uv run squeaktest analyze voicemail.m4a   # human-readable result and timeline
+uv run squeaktest analyze voicemail.m4a --json
+```
+
+The result is a band (*Likely synthetic*, *Uncertain*, *Likely genuine*, or *Not assessed* when
+there isn't enough sound), a score from 0 to 1, and a per-window timeline showing where the
+suspicious parts are. It never prints the file's name, so output is safe to log.
+
+Exit codes: `0` analysis finished, `1` input rejected, `2` setup problem (for example, the
+model hasn't been downloaded).
+
+Speed, measured on one machine: about 1 second per minute of audio on an RTX 3050 GPU, and
+14-25 seconds on CPU ([D15](docs/decisions.md)).
 
 ## Model
 
