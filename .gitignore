@@ -8,8 +8,8 @@ dist/
 build/
 *.egg-info/
 # datasets and model weights are fetched by script, never committed
-data/
-models/
+/data/
+/models/
 *.wav
 *.mp3
 *.flac

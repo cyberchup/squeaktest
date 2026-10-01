@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from squeaktest.config import MB, Settings
+from squeaktest.config import DEFAULT_DATA_DIR, MB, Settings
 
 
 def test_defaults_match_the_brief():
@@ -11,6 +11,7 @@ def test_defaults_match_the_brief():
     assert s.max_duration_s == 300.0
     assert s.decode_timeout_s == 30.0
     assert s.temp_dir is None
+    assert s.data_dir == DEFAULT_DATA_DIR
 
 
 def test_empty_environment_gives_defaults():
@@ -26,8 +27,10 @@ def test_environment_overrides():
             "SQUEAKTEST_FFMPEG": "/opt/ffmpeg/bin/ffmpeg",
             "SQUEAKTEST_FFPROBE": "/opt/ffmpeg/bin/ffprobe",
             "SQUEAKTEST_TEMP_DIR": "/run/squeaktest",
+            "SQUEAKTEST_DATA_DIR": "/srv/squeaktest-data",
         }
     )
+    assert s.data_dir == Path("/srv/squeaktest-data")
     assert s.max_file_bytes == 10 * MB
     assert s.max_duration_s == 60.0
     assert s.decode_timeout_s == 5.5

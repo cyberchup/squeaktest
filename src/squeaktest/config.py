@@ -11,12 +11,15 @@ from typing import Any
 
 MB = 1024 * 1024
 
+DEFAULT_DATA_DIR = Path.home() / ".cache" / "squeaktest"
+
 
 @dataclass(frozen=True)
 class Settings:
-    """Limits and tool locations for handling untrusted audio.
+    """Limits, tool locations and the data directory.
 
     All limits are configurable because the hosted demo may run tighter limits than local use.
+    Model weights and datasets live under `data_dir`, never in the repository.
     """
 
     max_file_bytes: int = 25 * MB
@@ -25,6 +28,7 @@ class Settings:
     ffmpeg: str = "ffmpeg"
     ffprobe: str = "ffprobe"
     temp_dir: Path | None = None
+    data_dir: Path = DEFAULT_DATA_DIR
 
     def __post_init__(self) -> None:
         for name in ("max_file_bytes", "max_duration_s", "decode_timeout_s"):
@@ -65,4 +69,5 @@ _ENV_VARS: dict[str, tuple[str, Callable[[str], Any]]] = {
     "SQUEAKTEST_FFMPEG": ("ffmpeg", str),
     "SQUEAKTEST_FFPROBE": ("ffprobe", str),
     "SQUEAKTEST_TEMP_DIR": ("temp_dir", Path),
+    "SQUEAKTEST_DATA_DIR": ("data_dir", Path),
 }
