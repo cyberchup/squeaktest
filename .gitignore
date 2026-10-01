@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+.idea/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+# datasets and model weights are fetched by script, never committed
+data/
+models/
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
