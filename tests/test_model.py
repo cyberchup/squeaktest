@@ -234,3 +234,41 @@ def test_batches_are_capped_and_results_unchanged(tiny_detector: Detector):
         del tiny_detector.net.forward
     assert sizes[:3] == [2, 2, 1]  # 5 windows in batches of at most 2
     np.testing.assert_allclose(capped, uncapped, atol=1e-5)
+
+
+TINY_BASE = dataclasses.replace(
+    TINY, name="tiny-base", norm_first=False, conv_norm="group", conv_bias=False
+)
+
+
+def fairseq_base_keys(num_layers: int) -> list[str]:
+    """NII's checkpoint layout for base models (like Wav2Vec2-Small)."""
+    ssl = "m_ssl.model."
+    keys = [f"{ssl}feature_extractor.conv_layers.{i}.0.weight" for i in range(7)]  # no biases
+    keys += [
+        f"{ssl}feature_extractor.conv_layers.0.2.{p}" for p in ("weight", "bias")
+    ]  # group norm
+    large_layer_keys = [k for k in fairseq_keys(num_layers) if "conv_layers" not in k]
+    return keys + large_layer_keys
+
+
+def test_conversion_covers_every_parameter_of_a_base_model():
+    converted = convert_state_dict({k: torch.zeros(1) for k in fairseq_base_keys(num_layers=2)})
+    assert set(converted) == set(AntiDeepfakeNet(TINY_BASE).state_dict())
+
+
+def test_base_and_large_configs_differ_where_they_should():
+    from squeaktest.model import W2V_SMALL, wav2vec2_config
+
+    large, base = wav2vec2_config(MMS_300M), wav2vec2_config(W2V_SMALL)
+    assert (large.do_stable_layer_norm, large.feat_extract_norm, large.conv_bias) == (
+        True,
+        "layer",
+        True,
+    )
+    assert (base.do_stable_layer_norm, base.feat_extract_norm, base.conv_bias) == (
+        False,
+        "group",
+        False,
+    )
+    assert (base.hidden_size, base.num_hidden_layers, base.num_attention_heads) == (768, 12, 12)

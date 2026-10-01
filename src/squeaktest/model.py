@@ -48,6 +48,12 @@ class ModelSpec:
     num_layers: int
     num_heads: int
     intermediate_size: int
+    # Large models normalize inside each block ("layer norm first") and after every
+    # convolution; base models normalize after each block and only after the first
+    # convolution (group norm), with no convolution biases.
+    norm_first: bool = True
+    conv_norm: str = "layer"  # "layer" or "group"
+    conv_bias: bool = True
 
     @property
     def source_url(self) -> str:
@@ -68,7 +74,38 @@ MMS_300M = ModelSpec(
     intermediate_size=4096,
 )
 
-MODELS: dict[str, ModelSpec] = {MMS_300M.name: MMS_300M}
+W2V_LARGE = ModelSpec(
+    name="antideepfake-w2v-large",
+    repo_id="nii-yamagishilab/wav2vec-large-anti-deepfake",
+    revision="7ccfcbb27d3098dafeb67596d4bb26e51e4627fc",
+    filename="model.safetensors",
+    sha256="b27943fefaff677bc95890051cf27b14fd72ab66e55eca6d3395cdb5788c2bb5",
+    size_bytes=1_269_622_944,
+    license="CC BY-NC-SA 4.0",
+    hidden_size=1024,
+    num_layers=24,
+    num_heads=16,
+    intermediate_size=4096,
+)
+
+W2V_SMALL = ModelSpec(
+    name="antideepfake-w2v-small",
+    repo_id="nii-yamagishilab/wav2vec-small-anti-deepfake",
+    revision="9a13264b5dcc827a8d5a4f8e01fccefa392f886b",
+    filename="model.safetensors",
+    sha256="828ee456122f86d5d631cb7895a10e5c62c78a4fcb8a8b1c42cb5838a9abcfe0",
+    size_bytes=380_210_632,
+    license="CC BY-NC-SA 4.0",
+    hidden_size=768,
+    num_layers=12,
+    num_heads=12,
+    intermediate_size=3072,
+    norm_first=False,
+    conv_norm="group",
+    conv_bias=False,
+)
+
+MODELS: dict[str, ModelSpec] = {m.name: m for m in (MMS_300M, W2V_LARGE, W2V_SMALL)}
 DEFAULT_MODEL = MMS_300M.name
 
 
@@ -132,10 +169,10 @@ def wav2vec2_config(spec: ModelSpec) -> Wav2Vec2Config:
         num_hidden_layers=spec.num_layers,
         num_attention_heads=spec.num_heads,
         intermediate_size=spec.intermediate_size,
-        # fairseq: extractor_mode="layer_norm", layer_norm_first=True, conv_bias=True
-        feat_extract_norm="layer",
-        do_stable_layer_norm=True,
-        conv_bias=True,
+        # fairseq's extractor_mode, layer_norm_first and conv_bias
+        feat_extract_norm=spec.conv_norm,
+        do_stable_layer_norm=spec.norm_first,
+        conv_bias=spec.conv_bias,
         layer_norm_eps=1e-5,
         # Inference only: no dropout, no layer drop, no masking.
         hidden_dropout=0.0,
@@ -162,15 +199,19 @@ class AntiDeepfakeNet(nn.Module):
         return self.classifier(hidden.mean(dim=1))
 
 
-# fairseq name -> transformers name. Order matters only for readability; patterns don't overlap.
+# fairseq name -> transformers name. The first matching pattern wins.
 _RENAMES: list[tuple[str, str]] = [
     (
         r"feature_extractor\.conv_layers\.(\d+)\.0\.",
         r"wav2vec2.feature_extractor.conv_layers.\1.conv.",
     ),
-    (
+    (  # large models: a layer norm after every convolution
         r"feature_extractor\.conv_layers\.(\d+)\.2\.1\.",
         r"wav2vec2.feature_extractor.conv_layers.\1.layer_norm.",
+    ),
+    (  # base models: one group norm, after the first convolution only
+        r"feature_extractor\.conv_layers\.0\.2\.",
+        r"wav2vec2.feature_extractor.conv_layers.0.layer_norm.",
     ),
     (r"layer_norm\.", r"wav2vec2.feature_projection.layer_norm."),
     (r"post_extract_proj\.", r"wav2vec2.feature_projection.projection."),
