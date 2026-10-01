@@ -4,13 +4,23 @@
 
 squeaktest is a deepfake voice detector. A user uploads an audio file and gets back an estimate of how likely the speech is to be synthetic (AI-generated or voice-cloned), along with where in the clip the suspicious segments are.
 
-The name is a Wisconsin nod. Fresh cheese curds squeak against your teeth and stale ones don't, and the "squeak test" is how you tell. Sibling project: **promptbadger** (prompt injection detector).
+The name is a Wisconsin nod. Fresh cheese curds squeak against your teeth and stale ones don't, and the "squeak test" is how you tell. Sibling project: **promptbadger** (prompt injection detector, `../promptbadger`). Match its conventions where they fit: SIEM event output, evaluation discipline, honest README.
+
+Repo: https://github.com/cyberchup/squeaktest
 
 ## Purpose and audience
 
 - This is a portfolio project. It should show detection-engineering thinking to security employers: honest evaluation, calibrated output, documented limitations, and secure handling of sensitive input.
 - It should run locally (Docker or CLI) and be hosted publicly on Hugging Face Spaces, and later on squeaktest.com.
 - Credibility matters more than flashy claims. Never overstate accuracy.
+
+## Primary use case: SOC triage
+
+The main user is a SOC analyst, or a helpdesk or finance team escalating to one, checking a suspicious voicemail, voice note or call recording (vishing, executive impersonation, helpdesk social engineering). This drives several choices:
+
+- Phone-quality and compressed audio (8 kHz telephone band, lossy codecs) is the main domain to evaluate, not clean studio speech.
+- Output includes a SIEM-ready JSON event, as promptbadger does, so results can feed Microsoft Sentinel or another SIEM.
+- Describe operating points in alert terms: detection rate at a fixed false-positive rate, and what that means at realistic base rates.
 
 ## Core principles
 
@@ -30,14 +40,23 @@ The name is a Wisconsin nod. Fresh cheese curds squeak against your teeth and st
 - **Supply chain.** Pin dependencies and run `pip-audit` and `bandit` in CI. Record the source, version, and license of every model weight.
 - The README gets a plain-language "How your audio is handled" section.
 
-## Stack (proposed; confirm in Phase 0)
+## Stack
 
+Confirmed:
 - Python 3.12, managed with `uv`
+- License: MIT (matches promptbadger)
+
+Proposed (confirm in Phase 0):
 - PyTorch with audio loading via `soundfile` or `torchaudio`, resampled to 16 kHz mono
 - Backend: FastAPI. UI: Gradio for HF Spaces, which can be mounted on FastAPI.
 - Tooling: `ruff` for lint and format, `pytest`, type hints throughout
 - Packaging: `pyproject.toml` with a CLI entry point `squeaktest`
 - Docker for local use and self-hosting
+
+## Hosting and data
+
+- **Hosting:** Hugging Face Spaces free CPU tier for now. The chosen model must run acceptably on CPU. Keep backends device-agnostic so a paid GPU tier can be added later without a rewrite. The hosted demo may use a lower maximum duration than local runs.
+- **Data:** Datasets and model weights live outside the repo, in the directory set by `SQUEAKTEST_DATA_DIR`, and are fetched by script. Never commit them.
 
 ## Proposed repo layout
 
@@ -59,28 +78,58 @@ README.md
 
 ## Roadmap
 
+Each phase ends with a stop for Dylan's review.
+
 **Phase 0: Research spike (do this first, before writing app code).**
 This field moves fast, so do not rely on memory. Research the current landscape and write `docs/research.md` covering:
 - current pretrained anti-spoofing / deepfake speech detectors (e.g. SSL front-end + classifier approaches), with their licenses and reported out-of-domain results
 - current datasets: ASVspoof editions, In-the-Wild, and newer multi-generator sets, with their licenses and download sizes
-- a recommendation for the initial model and evaluation set
+- fit for this project: CPU inference cost (free hosting tier), install practicality on Windows and Python 3.12, and relevance to phone audio
+- a shortlist of 2-3 models for the Phase 2 bake-off, and a recommendation for the initial model and evaluation sets
 
-Then stop and get Dylan's sign-off. Also confirm the project license (MIT vs Apache-2.0).
+Then stop and get Dylan's sign-off.
 
-**Phase 1: CLI inference.**
-`squeaktest analyze clip.wav` loads and validates the file, chunks it into windows, scores each window, and prints an aggregate score, a band, and per-segment scores. Include JSON output.
+**Phase 1 (v0.1): CLI inference.**
+`squeaktest analyze clip.wav` loads and validates the file, chunks it into windows, scores each window, and prints an aggregate score, a band, and per-segment scores. Include JSON output and a SIEM-style event.
+- Set up CI (ruff, pytest, pip-audit, bandit) with the first code commit.
+- Build the input security into `audio.py` now, since the CLI is an input surface too: content sniffing, size and duration limits, decode timeouts. Test with synthetic fixtures.
+- Label scores as uncalibrated until Phase 2 calibrates them.
+- Measure CPU and GPU latency and memory per minute of audio.
 
-**Phase 2: Evaluation harness.**
-Report EER, ROC-AUC, and calibration (reliability diagram) on an in-domain set and at least one out-of-domain set. Write `docs/model-card.md` and put a results table in the README.
+**Phase 2 (v0.2): Evaluation harness and model bake-off.**
+- Evaluate on an in-domain set, at least one out-of-domain set, and compressed versions of them (low-bitrate MP3, Opus, simulated phone line).
+- Report the metrics listed under Evaluation discipline.
+- Run the shortlisted models through the same harness and pick one with evidence.
+- Fit calibration and band thresholds on development data only.
+- Write `docs/model-card.md` and put a results table, with known gaps, in the README.
+- Decision gate: if out-of-domain results are poor, Dylan decides whether to ship with documented limits, switch models, or fine-tune.
 
-**Phase 3: Web app plus Docker.**
-FastAPI with a Gradio UI for upload, score, band, and segment timeline. Every security requirement above must be implemented and tested. Add a `docker compose up` local run.
+**Phase 3 (v0.3): Web app plus Docker.**
+FastAPI with a Gradio UI for upload, score, band, and segment timeline. Every security requirement above must be implemented and tested: rate limiting, security headers, locked-down CORS, a non-root container with a read-only filesystem. Add a `docker compose up` local run and a first `docs/threat-model.md` for the upload pipeline.
 
-**Phase 4: Publish.**
-Set up the GitHub repo (README, badges, CI) and an HF Spaces deployment, then point squeaktest.com at it.
+**Phase 4 (v1.0): Publish.**
+README badges, an HF Spaces deployment, then point squeaktest.com at it.
 
 **Phase 5: Stretch goals.**
-Spectrogram and attention visualization, an ensemble of models, a robustness test suite (codecs, noise, telephone band), and `docs/threat-model.md` covering adversarial evasion.
+Spectrogram and attention visualization, an ensemble of models, a full robustness suite (noise, reverb and more codecs), the adversarial-evasion section of `docs/threat-model.md`, and Microsoft Sentinel content (analytics rule and hunting KQL over the JSON events), as in promptbadger.
+
+## Evaluation discipline
+
+- Keep development data and held-out data separate. Calibration, band thresholds and any tuning are fit on development data only. Report held-out numbers as-is, including bad ones.
+- If a held-out set gets used for tuning, move it to the development list and say so in the README.
+- Report EER, ROC-AUC, detection rate at fixed false-positive rates (e.g. 1% and 5%), and calibration (reliability diagram), per dataset and per condition (clean, MP3, Opus, phone line).
+- Eval sets are roughly balanced; real traffic is mostly genuine. State the base-rate assumption behind any probability, and show what precision looks like at realistic prevalence.
+- Weak spots found in held-out results go under "Known gaps" in the README. Do not patch them against the held-out set.
+- Watch for shortcut learning (models keying on silence or recording conditions instead of the voice) and test for it where feasible.
+
+## Working with Dylan
+
+Dylan is a detection engineer (SOC/MSSP background, Sentinel/KQL) and is using this project to learn ML hands-on. Frame choices in detection-engineering terms (fidelity, false-positive rate, tuning, coverage), and:
+
+- Explain the why before the how. Introduce each new ML concept briefly (what it is, why it matters here) with one good source before relying on it.
+- Recommend, don't decide. Dylan makes the key calls (model, datasets, metrics, thresholds) after hearing the trade-offs.
+- Leave core ML pieces for Dylan to write: Claude writes the spec and failing tests, Dylan implements, Claude reviews. Candidates: windowing and aggregation, metrics (EER, detection rate at fixed FPR), calibration. Claude writes plumbing and security scaffolding and walks through it.
+- Agree on that split at the start of each phase.
 
 ## Working agreements
 
