@@ -1,0 +1,14 @@
+# In-the-Wild dev speakers: used only for calibration and band thresholds.
+# Chosen by eval.datasets.choose_dev_speakers(seed=0); every other speaker is test.
+# 11 of 54 speakers, 4826 of 31779 clips (15.2%), 41.8% fake (all clips: 37.2%).
+Alexandria Ocasio-Cortez
+Ayn Rand
+Bill Burr
+FDR
+George Carlin
+George W. Bush
+Kamala Harris
+Malcolm X
+Norm MacDonald
+Richard Nixon
+Tucker Carlson

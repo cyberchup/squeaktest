@@ -44,10 +44,13 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "N", "RUF"]
 "tests/**" = ["S101", "S603"]
 # Developer scripts run tools like uv by name, with fixed arguments.
 "scripts/**" = ["S603", "S607"]
+# The eval harness seeds random for reproducible splits and runs ffmpeg on dataset files.
+"eval/**" = ["S311", "S603"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+pythonpath = ["."]  # lets tests import the eval harness (eval/)
 
 # PyTorch: CUDA builds on Windows (local development on an NVIDIA GPU), CPU-only builds
 # elsewhere, so CI and CPU hosting don't download gigabytes of unused GPU libraries.
@@ -73,4 +76,7 @@ dev = [
     "pip-audit>=2.10.1",
     "pytest>=9.1.1",
     "ruff>=0.16.9",
+]
+eval = [
+    "matplotlib>=3.11.2",
 ]
