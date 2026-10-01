@@ -42,15 +42,20 @@ The main user is a SOC analyst, or a helpdesk or finance team escalating to one,
 
 ## Stack
 
-Confirmed:
+Confirmed (Phase 0 sign-off, 2026-09-30):
 - Python 3.12, managed with `uv`
-- License: MIT (matches promptbadger)
-
-Proposed (confirm in Phase 0):
-- PyTorch with audio loading via `soundfile` or `torchaudio`, resampled to 16 kHz mono
-- Backend: FastAPI. UI: Gradio for HF Spaces, which can be mounted on FastAPI.
+- License: MIT for the code (matches promptbadger)
+- PyTorch, with models loaded through Hugging Face `transformers`. Weights are ported from the official checkpoints; never depend on fairseq. Audio is resampled to 16 kHz mono.
+- Initial model: NII AntiDeepfake MMS-300M. Phase 2 bake-off shortlist: AntiDeepfake MMS-300M, Wav2Vec2-Large and Wav2Vec2-Small, plus TCM. See `docs/research.md`.
+- The AntiDeepfake weights are CC BY-NC-SA 4.0, so squeaktest and squeaktest.com stay non-commercial, and any fine-tuned weights inherit that license. State this in the README and model card.
 - Tooling: `ruff` for lint and format, `pytest`, type hints throughout
 - Packaging: `pyproject.toml` with a CLI entry point `squeaktest`
+
+Proposed (validate in Phase 1):
+- Audio decoding with `ffmpeg` in a subprocess (timeout, explicit demuxer, restricted protocols); `soundfile` optional for WAV and FLAC. Not torchaudio, whose I/O is deprecated.
+
+Planned (revisit in Phases 3-4, since free ZeroGPU hosting requires the Gradio SDK rather than Docker):
+- Backend: FastAPI. UI: Gradio for HF Spaces, which can be mounted on FastAPI.
 - Docker for local use and self-hosting
 
 ## Hosting and data
@@ -80,7 +85,7 @@ README.md
 
 Each phase ends with a stop for Dylan's review.
 
-**Phase 0: Research spike (do this first, before writing app code).**
+**Phase 0: Research spike (done; signed off 2026-09-30, see `docs/research.md` section 6).**
 This field moves fast, so do not rely on memory. Research the current landscape and write `docs/research.md` covering:
 - current pretrained anti-spoofing / deepfake speech detectors (e.g. SSL front-end + classifier approaches), with their licenses and reported out-of-domain results
 - current datasets: ASVspoof editions, In-the-Wild, and newer multi-generator sets, with their licenses and download sizes
@@ -100,6 +105,7 @@ Then stop and get Dylan's sign-off.
 - Evaluate on an in-domain set, at least one out-of-domain set, and compressed versions of them (low-bitrate MP3, Opus, simulated phone line).
 - Report the metrics listed under Evaluation discipline.
 - Run the shortlisted models through the same harness and pick one with evidence.
+- Deepfake-Eval-2024 (gated access) is deferred; revisit later as a second held-out set.
 - Fit calibration and band thresholds on development data only.
 - Write `docs/model-card.md` and put a results table, with known gaps, in the README.
 - Decision gate: if out-of-domain results are poor, Dylan decides whether to ship with documented limits, switch models, or fine-tune.

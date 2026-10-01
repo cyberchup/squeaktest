@@ -176,13 +176,13 @@ These all go to `SQUEAKTEST_DATA_DIR`, and I will ask before each one:
 
 Including extracted copies, plan for about 35 GB in total.
 
-## 6. Decisions for sign-off
+## 6. Decisions (signed off by Dylan, 2026-09-30)
 
-1. **Non-commercial weights:** accept CC BY-NC-SA 4.0, which keeps squeaktest.com non-commercial? The alternative is TCM or Wav2Vec2-AASIST (MIT), with weaker reported out-of-domain results (7.8–11% EER on In-the-Wild).
-2. **Shortlist and evaluation plan** as in section 5?
-3. **New dependency:** port the models to `transformers` instead of depending on fairseq?
-4. **Deepfake-Eval-2024:** request access? It asks for an institutional or company email, or evidence of deepfake-detection work.
-5. **Hosting:** stay on CPU basic with a cap of about 60 seconds, or try free ZeroGPU and give up the Docker hardening? This can wait until Phase 4.
+1. **Non-commercial weights:** accepted. squeaktest.com stays non-commercial. (The rejected alternative was TCM or Wav2Vec2-AASIST under MIT, with weaker reported results: 7.8–11% EER on In-the-Wild.)
+2. **Shortlist and evaluation plan:** approved as in section 5.
+3. **New dependency:** approved. Models are ported to `transformers`; no fairseq.
+4. **Deepfake-Eval-2024:** deferred. Revisit later.
+5. **Hosting:** still open until Phase 4: CPU basic with a cap of about 60 seconds, or free ZeroGPU without the Docker hardening.
 
 ## 7. Still to verify
 
