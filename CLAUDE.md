@@ -22,10 +22,12 @@ uv run pytest                     # tests; audio tests need ffmpeg and ffprobe o
 uv run ruff check                 # lint
 uv run ruff format                # format
 uv run bandit -r src              # security lint
-uv run pip-audit --skip-editable  # known-vulnerable dependencies
+uv run python scripts/audit_deps.py  # known-vulnerable dependencies, PyTorch included
 ```
 
 CI (`.github/workflows/ci.yml`) runs all of these on Ubuntu. Development is on Windows.
+
+PyTorch comes from PyTorch's own index: CUDA 13.0 builds on Windows, CPU builds elsewhere (see `[tool.uv.sources]` in pyproject.toml). Model weights download into `SQUEAKTEST_DATA_DIR/models/` (on Dylan's machine, an E: drive folder set as a user environment variable). The parity tests in `tests/test_model.py` run only when the weights are present; `scripts/parity_reference.py` regenerates their reference values from NII's original fairseq code.
 
 ## Primary use case: SOC triage
 

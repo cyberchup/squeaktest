@@ -138,3 +138,107 @@ confidence.
 
 **Impact:** a broken model produces an error instead of a result. That is the intended
 behavior.
+
+## D8. Rebuild NII's model in `transformers` instead of running fairseq (step 5, `model.py`)
+
+**Decision:** recreate the AntiDeepfake network with `transformers`' `Wav2Vec2Model` plus mean
+pooling and `Linear(1024, 2)`, and rename NII's fairseq-layout weights to fit it.
+
+**Why:** NII's official code needs fairseq, which is unmaintained, doesn't install on Python
+3.12, and pins old libraries (its config library only installs with pip older than 24.1).
+Depending on it would freeze the whole project on old, unpatched software. The network is a
+standard wav2vec 2.0 model that `transformers` implements, so the same computation can run on
+current, maintained libraries.
+
+**Evidence (measured):** five deterministic synthetic signals were run through NII's original
+code (Python 3.9, fairseq 0.12.2, PyTorch 2.8, weights loaded with strict key matching) and
+through the port. On CPU, the largest logit difference was 3.8e-5, and P(fake) matched to five
+decimal places on every signal. `tests/test_model.py` repeats the check whenever the weights
+are present, against values stored in `tests/data/`.
+
+**Impact:** no fairseq anywhere in squeaktest. The cost is that the port is ours to maintain:
+a future `transformers` release could change its internals. The parity test catches that
+locally, but CI can't run it, because CI doesn't download 1.27 GB of weights.
+
+**Revisit:** when adding the other shortlisted models in Phase 2, each needs its own parity
+check before its numbers count.
+
+## D9. The window score is P(fake) from NII's softmax, labeled uncalibrated (step 5)
+
+**Decision:** score = softmax(logits)[0], NII's "fake" probability.
+
+**Why:** it keeps NII's definition, so their published results and ours describe the same
+quantity.
+
+**Impact:** this number is not yet a trustworthy probability. NII's own model card shows the
+EER threshold for this model ranging from 0.62 on In-the-Wild to 0.99 on Deepfake-Eval-2024: the
+same raw score means very different things in different domains. Until Phase 2 calibrates it,
+output must say "uncalibrated" and the bands must not be read as probabilities.
+
+## D10. Normalize each window on its own (step 5)
+
+**Decision:** each window is scaled to zero mean and unit variance before the model sees it.
+
+**Why:** NII normalizes each input it scores, and NII scores whole utterances. squeaktest's
+model inputs are windows, so normalizing per window is the faithful equivalent.
+
+**Impact:** loudness differences between windows don't leak into scores: a quiet window isn't
+judged differently because a loud one sits next to it.
+
+**Revisit:** Phase 2 can compare per-window with whole-clip normalization on dev data.
+
+## D11. Batch windows of equal length; never pad (step 5)
+
+**Decision:** windows with the same number of samples run as one batch. Different lengths run
+separately.
+
+**Why:** padding short windows with zeros would put silence into the time average the
+classifier sees, which reintroduces the silence shortcut (D2) and changes the score.
+
+**Impact:** almost every window is exactly 4 s, so nearly all run in one batch. At most one or
+two odd-length windows (the end-aligned one, short clips) run alone. A test checks that batched
+and one-at-a-time scores agree.
+
+## D12. Full float32 on GPU: TF32 convolutions off (step 5)
+
+**Decision:** `load_detector` sets `torch.backends.cudnn.allow_tf32 = False` on CUDA.
+
+**Why (measured on the RTX 3050):** with cuDNN's default TF32 convolutions, GPU logits drifted
+up to 2.1e-3 from NII's reference; with full float32 they matched within 7.6e-5. Speed was the
+same: 38.7 ms versus 38.5 ms per 4-second window.
+
+**Impact:** the same clip gets the same score on CPU and GPU, which keeps Phase 2 results
+reproducible. It's a process-wide PyTorch setting, which is fine for squeaktest.
+
+## D13. Pinned weights, checked by SHA-256, loaded only from safetensors (step 5)
+
+**Decision:** each model is pinned to a Hugging Face commit, its file's SHA-256 is checked
+before every load, and weights load only from `.safetensors`.
+
+**Why:** supply chain. A repository can change after you depend on it, and a pinned commit
+can't. The checksum catches corruption and tampering. And safetensors files contain only
+numbers: loading them can't run code, unlike PyTorch's pickle-based `.pt`, `.bin` and `.pth`
+files. That matters later, because TCM ships a `.pth` file; it will need `weights_only=True`
+loading or a one-time conversion.
+
+**Impact:** about 3 seconds of hashing per load for the 1.27 GB file.
+
+## Known gaps
+
+### K1. Non-speech audio gets confident "fake" scores (found in step 5)
+
+**Finding (measured):** on the synthetic parity signals, the real model gave a 440 Hz tone
+P(fake) = 0.999 and a harmonic buzz 0.96, while noise got 0.01 and a frequency sweep 0.44. The
+model only learned about speech, so anything else produces confident-looking but meaningless
+scores.
+
+**Why it matters for a SOC:** voicemails contain system beeps, DTMF tones, ringback and hold
+music. The energy VAD (D1) treats all of these as activity, so they get scored. Top-3
+aggregation (D6) absorbs a single short beep, but not a long stretch of music. The likely result
+is false positives on real voicemails.
+
+**Options:** a speech-versus-non-speech check before scoring (a model-based VAD, or a simple
+tonality or music detector), or excluding windows that look tonal.
+
+**Status:** open. Measure it in Phase 2 on audio with tones and music, and fix it before any
+claim that squeaktest is ready for SOC use.
