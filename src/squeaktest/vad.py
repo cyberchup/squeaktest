@@ -28,10 +28,6 @@ Reference values that the tests check:
 - sine wave with amplitude 1.0 -> RMS 1/sqrt(2) -> -3.01 dBFS
 - sine wave with amplitude 0.1 -> -23.01 dBFS
 - digital silence (all zeros) -> log10(0) is -infinity, so clamp to SILENCE_DB (-100 dBFS)
-
-Your task: implement the four functions below so `uv run pytest tests/test_vad.py` passes.
-Hint: numpy can do this without a Python loop. Look at
-`numpy.lib.stride_tricks.sliding_window_view`, and read its docs on the `step` you need.
 """
 
 from __future__ import annotations
@@ -42,6 +38,9 @@ FRAME_MS = 25.0
 HOP_MS = 10.0
 DEFAULT_THRESHOLD_DB = -45.0
 SILENCE_DB = -100.0
+
+# The RMS value that corresponds to SILENCE_DB: 10 ** (-100 / 20) = 0.00001.
+_SILENCE_RMS = 10 ** (SILENCE_DB / 20)
 
 
 def frame_levels_db(
@@ -60,7 +59,23 @@ def frame_levels_db(
     - Raise ValueError if `samples` is not 1-D.
     - Don't modify `samples`.
     """
-    raise NotImplementedError
+    samples = np.asarray(samples)
+    if samples.ndim != 1:
+        raise ValueError(f"samples must be 1-D (mono), got shape {samples.shape}")
+    frame_length, hop_length = _frame_and_hop_lengths(sample_rate, frame_ms, hop_ms)
+    if samples.size < frame_length:
+        return np.zeros(0)
+
+    # sliding_window_view gives every run of frame_length consecutive samples as a row,
+    # without copying (it's a read-only view, so `samples` can't be modified). Taking every
+    # hop_length-th row keeps the frames that start at 0, hop, 2*hop, ...
+    frames = np.lib.stride_tricks.sliding_window_view(samples, frame_length)[::hop_length]
+
+    # Square in float64: float32 loses precision when squaring very small values.
+    rms = np.sqrt(np.mean(np.square(frames, dtype=np.float64), axis=1))
+
+    # Clamp before taking the log, so silence (RMS 0) becomes SILENCE_DB instead of -infinity.
+    return 20 * np.log10(np.maximum(rms, _SILENCE_RMS))
 
 
 def active_frames(
@@ -72,7 +87,7 @@ def active_frames(
 
     Uses the default frame and hop lengths. "Above" means strictly greater than.
     """
-    raise NotImplementedError
+    return frame_levels_db(samples, sample_rate) > threshold_db
 
 
 def speech_bounds(
@@ -85,7 +100,15 @@ def speech_bounds(
     `start` is where the first active frame begins and `end` is where the last active frame
     ends, so `samples[start:end]` is the clip with leading and trailing silence trimmed.
     """
-    raise NotImplementedError
+    # flatnonzero gives the indices of the True entries, i.e. which frames are active.
+    active = np.flatnonzero(active_frames(samples, sample_rate, threshold_db))
+    if active.size == 0:
+        return None
+    frame_length, hop_length = _frame_and_hop_lengths(sample_rate, FRAME_MS, HOP_MS)
+    # Frame i covers samples [i * hop, i * hop + frame_length).
+    start = int(active[0]) * hop_length
+    end = int(active[-1]) * hop_length + frame_length
+    return start, end
 
 
 def speech_fraction(
@@ -98,4 +121,16 @@ def speech_fraction(
     Step 4 uses this to skip windows that are mostly silent. Return 0.0 when there are no
     frames at all (for example, empty input).
     """
-    raise NotImplementedError
+    active = active_frames(samples, sample_rate, threshold_db)
+    if active.size == 0:
+        return 0.0
+    # The mean of a boolean array is the fraction of True values.
+    return float(active.mean())
+
+
+def _frame_and_hop_lengths(sample_rate: int, frame_ms: float, hop_ms: float) -> tuple[int, int]:
+    frame_length = round(sample_rate * frame_ms / 1000)
+    hop_length = round(sample_rate * hop_ms / 1000)
+    if frame_length < 1 or hop_length < 1:
+        raise ValueError("frame and hop must each be at least one sample long")
+    return frame_length, hop_length
