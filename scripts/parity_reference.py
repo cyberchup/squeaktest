@@ -5,9 +5,11 @@ safetensors). It mirrors the inference code on NII's model card for MMS-300M-Ant
 and loads the weights with strict key matching. squeaktest's transformers port must reproduce
 its output (tests/test_model.py).
 
-    python parity_reference.py WEIGHTS.safetensors INPUTS.npz OUTPUT.json
+    python parity_reference.py WEIGHTS.safetensors INPUTS.npz OUTPUT.json [large|base]
 
-INPUTS.npz holds 1-D float32 waveforms at 16 kHz (from tests/signals.py).
+INPUTS.npz holds 1-D float32 waveforms at 16 kHz (from tests/signals.py). "large" (the
+default) is the configuration on the MMS-300M and Wav2Vec2-Large model cards; "base" is the one
+on the Wav2Vec2-Small card.
 """
 
 import json
@@ -22,8 +24,19 @@ from safetensors.torch import load_file
 
 
 class SSLModel(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, arch):
         super().__init__()
+        if arch == "base":
+            cfg = Wav2Vec2Config(
+                encoder_layers=12,
+                encoder_embed_dim=768,
+                quantize_targets=True,
+                latent_dim=256,
+                final_dim=256,
+            )
+            self.model = Wav2Vec2Model(cfg)
+            self.dim = 768
+            return
         cfg = Wav2Vec2Config(
             quantize_targets=True,
             extractor_mode="layer_norm",
@@ -43,14 +56,15 @@ class SSLModel(torch.nn.Module):
             feature_grad_mult=1.0,
         )
         self.model = Wav2Vec2Model(cfg)
+        self.dim = 1024
 
 
 class DeepfakeDetector(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, arch):
         super().__init__()
-        self.m_ssl = SSLModel()
+        self.m_ssl = SSLModel(arch)
         self.adap_pool1d = torch.nn.AdaptiveAvgPool1d(output_size=1)
-        self.proj_fc = torch.nn.Linear(1024, 2)
+        self.proj_fc = torch.nn.Linear(self.m_ssl.dim, 2)
 
     def forward(self, wav):
         emb = self.m_ssl.model(wav, mask=False, features_only=True)["x"]  # [B, T, D]
@@ -58,8 +72,8 @@ class DeepfakeDetector(torch.nn.Module):
         return self.proj_fc(pooled)  # [B, 2]: (fake, real)
 
 
-def main(weights, inputs, output):
-    net = DeepfakeDetector()
+def main(weights, inputs, output, arch="large"):
+    net = DeepfakeDetector(arch)
     net.load_state_dict(load_file(weights), strict=True)
     net.eval()
     data = np.load(inputs)
@@ -76,6 +90,7 @@ def main(weights, inputs, output):
             "torch": torch.__version__,
             "fairseq": fairseq.__version__,
             "numpy": np.__version__,
+            "arch": arch,
         },
     }
     with open(output, "w") as f:
@@ -83,4 +98,4 @@ def main(weights, inputs, output):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:5])

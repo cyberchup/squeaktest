@@ -180,30 +180,39 @@ needs_weights = pytest.mark.skipif(
 )
 
 
-def _reference_logits() -> dict[str, np.ndarray]:
-    return {k: np.array(v) for k, v in json.loads(REFERENCE.read_text())["logits"].items()}
+REFERENCES = {
+    "antideepfake-mms-300m": REFERENCE,
+    "antideepfake-w2v-large": REFERENCE.with_name("antideepfake_w2v_large_reference.json"),
+    "antideepfake-w2v-small": REFERENCE.with_name("antideepfake_w2v_small_reference.json"),
+}
 
 
-@needs_weights
-@pytest.mark.parametrize(
-    ("device", "tolerance"),
-    [
-        ("cpu", 2e-4),
-        pytest.param(
-            "cuda",
-            5e-4,
-            marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="no CUDA GPU"),
-        ),
-    ],
-)
-def test_port_matches_niis_fairseq_model(device: str, tolerance: float):
-    detector = load_detector(data_dir=DATA_DIR, device=device)
-    reference = _reference_logits()
+def _reference_logits(path: Path) -> dict[str, np.ndarray]:
+    return {k: np.array(v) for k, v in json.loads(path.read_text())["logits"].items()}
+
+
+def _parity_cases():
+    from squeaktest.model import MODELS
+
+    for name, reference in REFERENCES.items():
+        missing = not weights_path(MODELS[name], DATA_DIR).exists()
+        skip_missing = pytest.mark.skipif(missing, reason=f"{name} weights not downloaded")
+        yield pytest.param(name, reference, "cpu", 2e-4, marks=skip_missing, id=f"{name}-cpu")
+        no_gpu = pytest.mark.skipif(not torch.cuda.is_available(), reason="no CUDA GPU")
+        yield pytest.param(
+            name, reference, "cuda", 5e-4, marks=[skip_missing, no_gpu], id=f"{name}-cuda"
+        )
+
+
+@pytest.mark.parametrize(("model", "reference", "device", "tolerance"), list(_parity_cases()))
+def test_port_matches_niis_fairseq_model(model: str, reference: Path, device: str, tolerance):
+    detector = load_detector(model, data_dir=DATA_DIR, device=device)
+    expected = _reference_logits(reference)
     signals = parity_signals()
-    names = sorted(reference)
+    names = sorted(expected)
     ours = detector.logits([signals[n] for n in names])
     for i, name in enumerate(names):
-        np.testing.assert_allclose(ours[i], reference[name], atol=tolerance, err_msg=name)
+        np.testing.assert_allclose(ours[i], expected[name], atol=tolerance, err_msg=name)
 
 
 @needs_weights
