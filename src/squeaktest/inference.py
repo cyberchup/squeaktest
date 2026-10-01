@@ -30,6 +30,24 @@ from squeaktest.vad import speech_bounds, speech_fraction
 # in [0, 1], where higher means more likely synthetic. Batching lets a model run them together.
 WindowScorer = Callable[[Sequence[np.ndarray]], Sequence[float] | np.ndarray]
 
+# Provisional band thresholds on the raw, uncalibrated score (docs/decisions.md D14).
+# Phase 2 replaces them with thresholds chosen on dev data at a target false-positive rate.
+LIKELY_SYNTHETIC_AT = 0.90
+LIKELY_GENUINE_BELOW = 0.50
+
+BANDS = ("likely_synthetic", "uncertain", "likely_genuine", "not_assessed")
+
+
+def band_for(score: float | None) -> str:
+    """Map a clip score to a band. No score means "not assessed", never "likely genuine"."""
+    if score is None:
+        return "not_assessed"
+    if score >= LIKELY_SYNTHETIC_AT:
+        return "likely_synthetic"
+    if score < LIKELY_GENUINE_BELOW:
+        return "likely_genuine"
+    return "uncertain"
+
 
 @dataclass(frozen=True)
 class WindowingConfig:
@@ -138,7 +156,7 @@ def analyze(
             score=None,
             windows=(),
             speech_s=speech_s,
-            note=f"less than {config.min_speech_s:g} s of speech; not enough to score",
+            note=f"less than {config.min_speech_s:g} s with sound; not enough to score",
         )
 
     scoreable = [w for w in windows if w.speech_fraction >= config.min_speech_fraction]

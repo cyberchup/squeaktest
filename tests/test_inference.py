@@ -17,6 +17,7 @@ from squeaktest.inference import (
     WindowingConfig,
     aggregate,
     analyze,
+    band_for,
     plan_windows,
 )
 
@@ -256,3 +257,22 @@ def test_bad_scorer_output_is_rejected(bad_output):
 def test_invalid_config_is_rejected(kwargs):
     with pytest.raises(ValueError):
         WindowingConfig(**kwargs)
+
+
+# --- Bands -------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("score", "band"),
+    [
+        (None, "not_assessed"),
+        (0.0, "likely_genuine"),
+        (0.4999, "likely_genuine"),
+        (0.5, "uncertain"),
+        (0.8999, "uncertain"),
+        (0.9, "likely_synthetic"),
+        (1.0, "likely_synthetic"),
+    ],
+)
+def test_band_thresholds(score, band):
+    assert band_for(score) == band

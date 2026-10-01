@@ -22,6 +22,9 @@ classifiers = [
   "Topic :: Multimedia :: Sound/Audio :: Analysis",
 ]
 
+[project.scripts]
+squeaktest = "squeaktest.cli:main"
+
 [project.urls]
 Repository = "https://github.com/cyberchup/squeaktest"
 
