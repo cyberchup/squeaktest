@@ -141,11 +141,16 @@ def load_audio_file(path: str | os.PathLike[str], settings: Settings | None = No
     file = Path(path)
     if not file.is_file():
         raise UnsupportedFormatError("input is not a regular file")
-    if file.stat().st_size > settings.max_file_bytes:
+    size = file.stat().st_size
+    if size > settings.max_file_bytes:
         raise FileTooLargeError(_too_large_message(settings))
     with file.open("rb") as f:
-        # Read one byte past the limit so a file that grew after the stat is still caught.
-        data = f.read(settings.max_file_bytes + 1)
+        # Read one byte more than the file's size: Python allocates the full requested length
+        # up front, so asking for the 25 MB limit on every small file wastes memory. The extra
+        # byte shows whether the file grew after the size check.
+        data = f.read(size + 1)
+    if len(data) > size:
+        raise UnsupportedFormatError("the file changed while it was being read")
     return load_audio_bytes(data, settings)
 
 
