@@ -31,6 +31,7 @@ import numpy as np
 
 from eval.datasets import (
     Clip,
+    load_asvspoof2019_eval,
     load_in_the_wild,
     read_dev_speakers,
     split_clips,
@@ -157,7 +158,9 @@ def output_path(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--dataset", default="in-the-wild", choices=["in-the-wild"])
+    parser.add_argument(
+        "--dataset", default="in-the-wild", choices=["in-the-wild", "asvspoof2019-la"]
+    )
     parser.add_argument("--condition", default="clean", choices=sorted(CONDITIONS))
     parser.add_argument("--split", default="all", choices=["all", "dev", "test"])
     parser.add_argument("--sample", type=int, help="score a stratified random subset of this size")
@@ -174,7 +177,12 @@ def main(argv: list[str] | None = None) -> int:
     # minimum-speech rules later in eval.analyze. Then those rules can be tuned on dev data
     # without re-running the model.
     config = WindowingConfig(min_speech_s=0.0, min_speech_fraction=0.0)
-    clips = split_clips(load_in_the_wild(settings.data_dir), args.split, read_dev_speakers())
+    if args.dataset == "in-the-wild":
+        clips = split_clips(load_in_the_wild(settings.data_dir), args.split, read_dev_speakers())
+    elif args.split != "all":
+        parser.error("ASVspoof has no dev/test split here; use --split all")
+    else:
+        clips = load_asvspoof2019_eval(settings.data_dir)
     if args.sample:
         clips = stratified_sample(clips, args.sample, args.seed)
     out = output_path(

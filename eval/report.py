@@ -98,7 +98,7 @@ def write_report(r: dict, path: Path) -> None:
         "",
         "## Bands (thresholds chosen on dev, applied to test)",
         "",
-        f"*Likely synthetic* at calibrated score {th['likely_synthetic_at']:.3f} or above (at most "
+        f"*Likely synthetic* at raw score {th['likely_synthetic_at']:.3f} or above (at most "
         f"{_pct(rules['likely_synthetic_max_dev_fpr'])} of genuine dev clips). *Likely genuine* "
         f"below {th['likely_genuine_below']:.3f} (at least "
         f"{_pct(rules['likely_genuine_min_dev_fake_recall'])} of dev fakes stay above it).",
@@ -121,6 +121,24 @@ def write_report(r: dict, path: Path) -> None:
     ]
     for prevalence, precision in r["base_rates"].items():
         lines.append(_row(f"{float(prevalence):g}", _pct(precision)))
+
+    if "asvspoof2019_la" in r:
+        a = r["asvspoof2019_la"]
+        lines += [
+            "",
+            "## In-domain reference: ASVspoof 2019 LA eval (5,000-clip sample)",
+            "",
+            "Lab-generated speech. AntiDeepfake was trained on ASVspoof 2019, so this is seen",
+            "data, a ceiling for comparison rather than a held-out result.",
+            "",
+            *_header("EER", "ROC-AUC", "Fakes caught at 1% FPR", "Clips"),
+            _row(
+                _ci(a["eer"]),
+                _ci(a["auc"], pct=False),
+                _ci(a["tpr_at_1pct_fpr"]),
+                f"{a['clips']:,}",
+            ),
+        ]
 
     if r["conditions"]:
         lines += ["", "## Phone and compression conditions (3,000-clip test sample)", ""]

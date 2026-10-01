@@ -61,7 +61,7 @@ def test_thresholds_respect_the_dev_rules():
     flagged_genuine = (probs[labels == 0] >= t["likely_synthetic_at"]).mean()
     fakes_called_genuine = (probs[labels == 1] < t["likely_genuine_below"]).mean()
     assert flagged_genuine <= 0.01
-    assert fakes_called_genuine <= 0.05
+    assert fakes_called_genuine <= 0.01
     assert t["likely_genuine_below"] <= t["likely_synthetic_at"]
 
 

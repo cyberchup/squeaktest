@@ -41,6 +41,25 @@ def load_in_the_wild(data_dir: Path) -> list[Clip]:
     return [Clip(r["file"], root / r["file"], labels[r["label"]], r["speaker"]) for r in rows]
 
 
+def asvspoof_root(data_dir: Path) -> Path:
+    return Path(data_dir) / "datasets" / "asvspoof2019" / "LA_eval"
+
+
+def load_asvspoof2019_eval(data_dir: Path) -> list[Clip]:
+    """ASVspoof 2019 LA eval (from eval.prepare_asvspoof). Lab TTS and voice conversion.
+
+    AntiDeepfake was trained on ASVspoof 2019, so for it this is seen data: a reference point
+    for "in the lab", not a held-out result.
+    """
+    root = asvspoof_root(data_dir)
+    with (root / "meta.csv").open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    labels = {"spoof": 1, "bonafide": 0}
+    return [
+        Clip(r["file"], root / "flac" / r["file"], labels[r["label"]], r["speaker"]) for r in rows
+    ]
+
+
 def choose_dev_speakers(
     clips: Iterable[Clip],
     speaker_fraction: float = 0.2,

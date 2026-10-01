@@ -42,7 +42,7 @@ from squeaktest.metrics import (
 
 RESULTS_DIR = Path(__file__).parent / "results"
 SYNTHETIC_BAND_MAX_FPR = 0.01  # "likely synthetic" may flag at most 1% of genuine dev clips
-GENUINE_BAND_MIN_RECALL = 0.95  # "likely genuine" may hold at most 5% of fake dev clips
+GENUINE_BAND_MIN_RECALL = 0.99  # "likely genuine" may hold at most 1% of fake dev clips
 DURATION_BUCKETS = [(0, 2), (2, 4), (4, 8), (8, 1e9)]
 
 
@@ -158,10 +158,14 @@ def split_mask(d: Scored, dev_speakers: set[str], split: str) -> np.ndarray:
 
 
 def choose_thresholds(dev_labels: np.ndarray, dev_probs: np.ndarray) -> dict:
-    """Band thresholds on the calibrated scale, chosen on dev data only."""
+    """Band thresholds, chosen on dev data only.
+
+    Symmetric rule: each "likely" band may hold at most 1% of the other class on dev, and
+    everything between the two thresholds is "uncertain".
+    """
     synthetic = at_fpr(dev_labels, dev_probs, SYNTHETIC_BAND_MAX_FPR).threshold
     fake_probs = np.sort(dev_probs[dev_labels == 1])
-    # Highest threshold that still leaves at least 95% of dev fakes at or above it.
+    # Highest threshold that still leaves at least 99% of dev fakes at or above it.
     genuine = float(fake_probs[int(np.floor((1 - GENUINE_BAND_MIN_RECALL) * fake_probs.size))])
     return {
         "likely_synthetic_at": float(synthetic),
@@ -277,8 +281,8 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
     }
 
     # 6. Bands: thresholds chosen on dev, reported on test
-    dev_probs = calibrator(dev.scores)
-    thresholds = choose_thresholds(dev.labels, dev_probs)
+    # Bands use raw scores: the dev-fitted calibration made test calibration worse (D16).
+    thresholds = choose_thresholds(dev.labels, dev.scores)
     t_syn = thresholds["likely_synthetic_at"]
     results["bands"] = {
         "thresholds": thresholds,
@@ -286,8 +290,8 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
             "likely_synthetic_max_dev_fpr": SYNTHETIC_BAND_MAX_FPR,
             "likely_genuine_min_dev_fake_recall": GENUINE_BAND_MIN_RECALL,
         },
-        "test": band_table(test.labels, test_probs, thresholds),
-        "test_at_synthetic_threshold": at_threshold(test.labels, test_probs, t_syn),
+        "test": band_table(test.labels, test.scores, thresholds),
+        "test_at_synthetic_threshold": at_threshold(test.labels, test.scores, t_syn),
     }
     op = results["bands"]["test_at_synthetic_threshold"]
     results["base_rates"] = {
@@ -299,7 +303,17 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
         "calibrated_0.9_at_1_in_1000": float(shift_prior([0.9], fitted_share, 0.001)[0]),
     }
 
-    # 7. Phone and compression conditions, on the stratified test sample
+    # 7. In-domain reference: ASVspoof 2019 LA eval (seen data for AntiDeepfake)
+    asv_path = (
+        Path(data_dir) / "eval" / "scores" / model / "asvspoof2019-la" / "clean-all-n5000.jsonl"
+    )
+    if asv_path.exists():
+        asv_records = load_records(asv_path)
+        asv = score_records(asv_records, policy)
+        results["asvspoof2019_la"] = summarize(asv, n_boot // 2)
+        results["asvspoof2019_la"]["coverage"] = coverage(asv)
+
+    # 8. Phone and compression conditions, on the stratified test sample
     results["conditions"] = {}
     for name in CONDITIONS:
         if name == "clean":
@@ -311,7 +325,6 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
         ids = {r["id"] for r in cond_records}
         cond = score_records(cond_records, policy)
         paired_clean = score_records([r for r in test_records if r["id"] in ids], policy)
-        cond_probs = calibrator(cond.scores)
         results["conditions"][name] = {
             "description": CONDITIONS[name].description,
             "metrics": summarize(cond, n_boot // 2),
@@ -320,8 +333,8 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
                 "eer": _eer(paired_clean.labels, paired_clean.scores),
                 "auc": roc_auc(paired_clean.labels, paired_clean.scores),
             },
-            "at_clean_dev_thresholds": at_threshold(cond.labels, cond_probs, t_syn),
-            "bands": band_table(cond.labels, cond_probs, thresholds),
+            "at_clean_dev_thresholds": at_threshold(cond.labels, cond.scores, t_syn),
+            "bands": band_table(cond.labels, cond.scores, thresholds),
         }
     return results
 

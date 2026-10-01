@@ -43,7 +43,7 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "N", "RUF"]
 # Tests use plain asserts and call ffmpeg to generate synthetic fixtures.
 "tests/**" = ["S101", "S603"]
 # Developer scripts run tools like uv by name, with fixed arguments.
-"scripts/**" = ["S603", "S607"]
+"scripts/**" = ["S311", "S603", "S607"]
 # The eval harness seeds random for reproducible splits and runs ffmpeg on dataset files.
 "eval/**" = ["S311", "S603"]
 
@@ -79,4 +79,5 @@ dev = [
 ]
 eval = [
     "matplotlib>=3.11.2",
+    "pyarrow>=25.0.1",
 ]
