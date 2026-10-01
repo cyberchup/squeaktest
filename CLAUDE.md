@@ -14,6 +14,19 @@ Repo: https://github.com/cyberchup/squeaktest
 - It should run locally (Docker or CLI) and be hosted publicly on Hugging Face Spaces, and later on squeaktest.com.
 - Credibility matters more than flashy claims. Never overstate accuracy.
 
+## Commands
+
+```bash
+uv sync                           # create .venv from uv.lock
+uv run pytest                     # tests; audio tests need ffmpeg and ffprobe on PATH
+uv run ruff check                 # lint
+uv run ruff format                # format
+uv run bandit -r src              # security lint
+uv run pip-audit --skip-editable  # known-vulnerable dependencies
+```
+
+CI (`.github/workflows/ci.yml`) runs all of these on Ubuntu. Development is on Windows.
+
 ## Primary use case: SOC triage
 
 The main user is a SOC analyst, or a helpdesk or finance team escalating to one, checking a suspicious voicemail, voice note or call recording (vishing, executive impersonation, helpdesk social engineering). This drives several choices:

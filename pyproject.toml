@@ -1,0 +1,47 @@
+[project]
+name = "squeaktest"
+version = "0.1.0.dev0"
+description = "Deepfake voice detector with calibrated, probabilistic output, built for SOC triage."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Dylan Wood" }]
+requires-python = ">=3.12"
+dependencies = []
+keywords = ["deepfake", "audio", "anti-spoofing", "security", "detection-engineering"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Security",
+  "Topic :: Multimedia :: Sound/Audio :: Analysis",
+]
+
+[project.urls]
+Repository = "https://github.com/cyberchup/squeaktest"
+
+[build-system]
+requires = ["uv_build>=0.12.21,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "N", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use plain asserts and call ffmpeg to generate synthetic fixtures.
+"tests/**" = ["S101", "S603"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+    "pip-audit>=2.10.1",
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]
