@@ -8,7 +8,11 @@ license-files = ["LICENSE"]
 authors = [{ name = "Dylan Wood" }]
 requires-python = ">=3.12"
 dependencies = [
+    "huggingface-hub>=1.33.0",
     "numpy>=2.5.3",
+    "safetensors>=0.8.0",
+    "torch>=2.14.1",
+    "transformers>=5.18.0",
 ]
 keywords = ["deepfake", "audio", "anti-spoofing", "security", "detection-engineering"]
 classifiers = [
@@ -35,10 +39,30 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "N", "RUF"]
 [tool.ruff.lint.per-file-ignores]
 # Tests use plain asserts and call ffmpeg to generate synthetic fixtures.
 "tests/**" = ["S101", "S603"]
+# Developer scripts run tools like uv by name, with fixed arguments.
+"scripts/**" = ["S603", "S607"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+# PyTorch: CUDA builds on Windows (local development on an NVIDIA GPU), CPU-only builds
+# elsewhere, so CI and CPU hosting don't download gigabytes of unused GPU libraries.
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+  { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [dependency-groups]
 dev = [
