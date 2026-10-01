@@ -26,7 +26,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from safetensors.torch import load_file
+from safetensors.torch import load
 from torch import nn
 from transformers import Wav2Vec2Config, Wav2Vec2Model
 
@@ -108,7 +108,20 @@ def verify_weights(spec: ModelSpec, path: Path) -> None:
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(8 * 1024 * 1024), b""):
             digest.update(chunk)
-    if digest.hexdigest() != spec.sha256:
+    _check_digest(spec, digest.hexdigest())
+
+
+def _verified_bytes(spec: ModelSpec, path: Path) -> bytes:
+    """Read the weights once and verify those exact bytes, so what's loaded is what's checked."""
+    data = path.read_bytes()
+    if len(data) != spec.size_bytes:
+        raise ModelIntegrityError(f"{spec.name}: weights file has the wrong size")
+    _check_digest(spec, hashlib.sha256(data).hexdigest())
+    return data
+
+
+def _check_digest(spec: ModelSpec, hexdigest: str) -> None:
+    if hexdigest != spec.sha256:
         raise ModelIntegrityError(f"{spec.name}: weights file does not match its SHA-256")
 
 
@@ -235,24 +248,31 @@ class Detector:
     It satisfies inference.WindowScorer, so it can be passed straight to inference.analyze.
     """
 
-    def __init__(self, spec: ModelSpec, net: AntiDeepfakeNet, device: torch.device) -> None:
+    def __init__(
+        self, spec: ModelSpec, net: AntiDeepfakeNet, device: torch.device, max_batch: int = 8
+    ) -> None:
         self.spec = spec
         self.net = net
         self.device = device
+        # Caps memory: the first convolution's output alone is about 26 MB per 4 s window, so
+        # one batch for a 5-minute clip (149 windows) would need about 4 GB for that layer.
+        self.max_batch = max_batch
 
     @torch.inference_mode()
     def logits(self, windows: Sequence[np.ndarray]) -> np.ndarray:
         """Raw (fake, real) logits for each window."""
         out = np.empty((len(windows), 2), dtype=np.float64)
-        # Windows of equal length run together as one batch. Padding shorter ones would
-        # change the time average the classifier sees, so different lengths run separately.
+        # Windows of equal length run together, up to max_batch at a time. Padding shorter ones
+        # would change the time average the classifier sees, so different lengths run apart.
         by_length: dict[int, list[int]] = {}
         for i, w in enumerate(windows):
             by_length.setdefault(len(w), []).append(i)
-        for indices in by_length.values():
-            batch = torch.from_numpy(np.stack([windows[i] for i in indices]).astype(np.float32))
-            logits = self.net(normalize(batch.to(self.device)))
-            out[indices] = logits.float().cpu().numpy()
+        for same_length in by_length.values():
+            for start in range(0, len(same_length), self.max_batch):
+                indices = same_length[start : start + self.max_batch]
+                batch = np.stack([windows[i] for i in indices]).astype(np.float32)
+                logits = self.net(normalize(torch.from_numpy(batch).to(self.device)))
+                out[indices] = logits.float().cpu().numpy()
         return out
 
     def __call__(self, windows: Sequence[np.ndarray]) -> list[float]:
@@ -276,10 +296,13 @@ def load_detector(
             f"{spec.name} weights not found under {Path(data_dir) / 'models'}. "
             f"Download them first ({spec.size_bytes / 1e9:.2f} GB, license {spec.license})."
         )
-    verify_weights(spec, path)
+    state = convert_state_dict(load(_verified_bytes(spec, path)))
 
-    net = AntiDeepfakeNet(spec)
-    net.load_state_dict(convert_state_dict(load_file(path)), strict=True)
+    # Build on the "meta" device: shapes only, no memory and no random initialization (which
+    # took about 20 s for 300M parameters), then assign the real weights in place.
+    with torch.device("meta"):
+        net = AntiDeepfakeNet(spec)
+    net.load_state_dict(state, strict=True, assign=True)
     torch_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     if torch_device.type == "cuda":
         # cuDNN's default TF32 convolutions made GPU logits drift up to 2e-3 from NII's

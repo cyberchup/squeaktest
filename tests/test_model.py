@@ -213,3 +213,24 @@ def test_real_detector_plugs_into_windowed_analysis():
     result = analyze(audio, 16_000, detector)
     assert result.score is not None and 0.0 <= result.score <= 1.0
     assert all(w.score is not None for w in result.windows)
+
+
+def test_batches_are_capped_and_results_unchanged(tiny_detector: Detector):
+    windows = [parity_signals()["tone_440hz_4s"] * (1 + i / 10) for i in range(5)]
+    sizes: list[int] = []
+    original_forward = tiny_detector.net.forward
+
+    def recording_forward(waveforms):
+        sizes.append(waveforms.shape[0])
+        return original_forward(waveforms)
+
+    tiny_detector.net.forward = recording_forward
+    try:
+        tiny_detector.max_batch = 2
+        capped = tiny_detector.logits(windows)
+        tiny_detector.max_batch = 8
+        uncapped = tiny_detector.logits(windows)
+    finally:
+        del tiny_detector.net.forward
+    assert sizes[:3] == [2, 2, 1]  # 5 windows in batches of at most 2
+    np.testing.assert_allclose(capped, uncapped, atol=1e-5)
