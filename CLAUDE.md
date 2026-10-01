@@ -147,8 +147,7 @@ Dylan is a detection engineer (SOC/MSSP background, Sentinel/KQL) and is using t
 
 - Explain the why before the how. Introduce each new ML concept briefly (what it is, why it matters here) with one good source before relying on it.
 - Recommend, don't decide. Dylan makes the key calls (model, datasets, metrics, thresholds) after hearing the trade-offs.
-- Leave core ML pieces for Dylan to write: Claude writes the spec and failing tests, Dylan implements, Claude reviews. Candidates: windowing and aggregation, metrics (EER, detection rate at fixed FPR), calibration. Claude writes plumbing and security scaffolding and walks through it.
-- Agree on that split at the start of each phase.
+- Claude writes the code, including the core ML pieces (decided 2026-10-01). For every ML choice, explain why it was chosen over the alternatives and its impact on detection quality (missed fakes, false positives, cost). Record significant choices in `docs/decisions.md` (decision, why, impact, when to revisit) so Dylan can defend them in interviews.
 
 ## Working agreements
 
