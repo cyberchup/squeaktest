@@ -1,0 +1,639 @@
+{
+  "model": "antideepfake-w2v-small",
+  "policy": {
+    "min_speech_s": 1.0,
+    "min_speech_fraction": 0.5,
+    "top_k": 3
+  },
+  "test_clean": {
+    "clips": 23098,
+    "fakes": 8694,
+    "speakers": 43,
+    "eer": {
+      "estimate": 0.03197607545433634,
+      "low": 0.0226988424057633,
+      "high": 0.04504261634478347
+    },
+    "auc": {
+      "estimate": 0.9952530247617362,
+      "low": 0.9916131101007383,
+      "high": 0.9973923919203878
+    },
+    "tpr_at_1pct_fpr": {
+      "estimate": 0.9233954451345756,
+      "low": 0.8817783449406857,
+      "high": 0.9541890120570344
+    },
+    "tpr_at_5pct_fpr": {
+      "estimate": 0.9771106510236945,
+      "low": 0.957309190040046,
+      "high": 0.9883461926711794
+    },
+    "coverage": {
+      "genuine": {
+        "not_assessed": 2752,
+        "of": 17156,
+        "share": 0.16041035206341805
+      },
+      "synthetic": {
+        "not_assessed": 1103,
+        "of": 9797,
+        "share": 0.11258548535265897
+      }
+    }
+  },
+  "dev_clean": {
+    "clips": 4353,
+    "fakes": 1833,
+    "speakers": 11,
+    "eer": {
+      "estimate": 0.028174603174603175,
+      "low": 0.012598425196850394,
+      "high": 0.05351620115162844
+    },
+    "auc": {
+      "estimate": 0.9963060383273149,
+      "low": 0.9897423503085606,
+      "high": 0.9988907881251726
+    },
+    "tpr_at_1pct_fpr": {
+      "estimate": 0.9383524277141299,
+      "low": 0.8895120397545357,
+      "high": 0.9864078367503353
+    },
+    "tpr_at_5pct_fpr": {
+      "estimate": 0.9825422804146209,
+      "low": 0.9442076330532213,
+      "high": 0.9962240167182064
+    }
+  },
+  "length_baseline_test": {
+    "auc": 0.6243407404724309,
+    "eer": 0.41099009900990097
+  },
+  "by_duration_test": [
+    {
+      "seconds": [
+        0,
+        2
+      ],
+      "clips": 2606,
+      "fake_share": 0.24942440521872603,
+      "eer": 0.10307692307692307,
+      "auc": 0.9617154318074563
+    },
+    {
+      "seconds": [
+        2,
+        4
+      ],
+      "clips": 10359,
+      "fake_share": 0.31151655565208997,
+      "eer": 0.03827818283791363,
+      "auc": 0.9934435700181847
+    },
+    {
+      "seconds": [
+        4,
+        8
+      ],
+      "clips": 7241,
+      "fake_share": 0.4234221792570087,
+      "eer": 0.010437051532941943,
+      "auc": 0.999509317958994
+    },
+    {
+      "seconds": [
+        8,
+        null
+      ],
+      "clips": 2892,
+      "fake_share": 0.6054633471645919,
+      "eer": 0.033304119193689745,
+      "auc": 0.9977025773678344
+    }
+  ],
+  "genuine_score_vs_duration_spearman": -0.3454815400269006,
+  "aggregation_test": {
+    "mean": {
+      "eer": 0.03221327409053041,
+      "auc": 0.9952906120893877,
+      "tpr_at_1pct_fpr": 0.9323671497584541
+    },
+    "top_3": {
+      "eer": 0.03197607545433634,
+      "auc": 0.9952530247617362,
+      "tpr_at_1pct_fpr": 0.9233954451345756
+    },
+    "max": {
+      "eer": 0.03242154956956401,
+      "auc": 0.9952030760184896,
+      "tpr_at_1pct_fpr": 0.9237405106970324
+    }
+  },
+  "min_speech_dev": [
+    {
+      "min_speech_s": 0.0,
+      "eer": 0.04386590584878745,
+      "not_assessed_genuine": 0.0010687566797292483,
+      "not_assessed_synthetic": 0.001981178801386825
+    },
+    {
+      "min_speech_s": 0.5,
+      "eer": 0.039195979899497524,
+      "not_assessed_genuine": 0.016031350195938723,
+      "not_assessed_synthetic": 0.014363546310054482
+    },
+    {
+      "min_speech_s": 1.0,
+      "eer": 0.028174603174603175,
+      "not_assessed_genuine": 0.10224438902743142,
+      "not_assessed_synthetic": 0.09212481426448738
+    },
+    {
+      "min_speech_s": 1.5,
+      "eer": 0.02218114602587795,
+      "not_assessed_genuine": 0.20627003918774492,
+      "not_assessed_synthetic": 0.1961367013372957
+    },
+    {
+      "min_speech_s": 2.0,
+      "eer": 0.018210197710718003,
+      "not_assessed_genuine": 0.31528322052012825,
+      "not_assessed_synthetic": 0.31154036651807826
+    }
+  ],
+  "calibration": {
+    "platt": {
+      "a": 0.836764635669365,
+      "b": 0.42409511475445705,
+      "fitted_fake_share": 0.42108890420399725
+    },
+    "test_raw": {
+      "ece": 0.01813514079478573,
+      "brier": 0.024831283869423144
+    },
+    "test_calibrated": {
+      "ece": 0.011610506760801418,
+      "brier": 0.02330003409392352
+    },
+    "reliability_raw": [
+      {
+        "low": 0.0,
+        "high": 0.1,
+        "mean_predicted": 0.0032291901427159084,
+        "fraction_synthetic": 0.01935393060736153,
+        "count": 14209
+      },
+      {
+        "low": 0.1,
+        "high": 0.2,
+        "mean_predicted": 0.14446440842476393,
+        "fraction_synthetic": 0.36619718309859156,
+        "count": 213
+      },
+      {
+        "low": 0.2,
+        "high": 0.30000000000000004,
+        "mean_predicted": 0.2474958992023034,
+        "fraction_synthetic": 0.43089430894308944,
+        "count": 123
+      },
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "mean_predicted": 0.34607845923065805,
+        "fraction_synthetic": 0.5929203539823009,
+        "count": 113
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "mean_predicted": 0.4500316682763519,
+        "fraction_synthetic": 0.632183908045977,
+        "count": 87
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "mean_predicted": 0.5445492258641536,
+        "fraction_synthetic": 0.7727272727272727,
+        "count": 88
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "mean_predicted": 0.6501052939104576,
+        "fraction_synthetic": 0.7456140350877193,
+        "count": 114
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "mean_predicted": 0.755354786506006,
+        "fraction_synthetic": 0.762962962962963,
+        "count": 135
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "mean_predicted": 0.8530015598973474,
+        "fraction_synthetic": 0.7913043478260869,
+        "count": 230
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "mean_predicted": 0.9964110523027273,
+        "fraction_synthetic": 0.9925507320832263,
+        "count": 7786
+      }
+    ],
+    "reliability_calibrated": [
+      {
+        "low": 0.0,
+        "high": 0.1,
+        "mean_predicted": 0.005160565709362037,
+        "fraction_synthetic": 0.014004186818739623,
+        "count": 13853
+      },
+      {
+        "low": 0.1,
+        "high": 0.2,
+        "mean_predicted": 0.1401947166284312,
+        "fraction_synthetic": 0.23013698630136986,
+        "count": 365
+      },
+      {
+        "low": 0.2,
+        "high": 0.30000000000000004,
+        "mean_predicted": 0.24572643123423724,
+        "fraction_synthetic": 0.3614457831325301,
+        "count": 166
+      },
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "mean_predicted": 0.34527940759306425,
+        "fraction_synthetic": 0.42857142857142855,
+        "count": 126
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "mean_predicted": 0.44958081492754964,
+        "fraction_synthetic": 0.5476190476190477,
+        "count": 126
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "mean_predicted": 0.5514645831003356,
+        "fraction_synthetic": 0.6074766355140186,
+        "count": 107
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "mean_predicted": 0.6490021818408777,
+        "fraction_synthetic": 0.7589285714285714,
+        "count": 112
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "mean_predicted": 0.7466069272179426,
+        "fraction_synthetic": 0.7707006369426752,
+        "count": 157
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "mean_predicted": 0.8542429652828398,
+        "fraction_synthetic": 0.7793594306049823,
+        "count": 281
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "mean_predicted": 0.9955993360936957,
+        "fraction_synthetic": 0.9920563741191544,
+        "count": 7805
+      }
+    ]
+  },
+  "bands": {
+    "thresholds": {
+      "likely_synthetic_at": 0.6531087584606815,
+      "likely_genuine_below": 0.03906846269396557
+    },
+    "rules": {
+      "likely_synthetic_max_dev_fpr": 0.01,
+      "likely_genuine_min_dev_fake_recall": 0.99
+    },
+    "test": {
+      "genuine": {
+        "likely_synthetic": 0.010413773951680088,
+        "uncertain": 0.04373785059705637,
+        "likely_genuine": 0.9458483754512635
+      },
+      "synthetic": {
+        "likely_synthetic": 0.9268461007591442,
+        "uncertain": 0.05106970324361629,
+        "likely_genuine": 0.022084195997239476
+      }
+    },
+    "test_at_synthetic_threshold": {
+      "fpr": 0.010413773951680088,
+      "tpr": 0.9268461007591442
+    }
+  },
+  "base_rates": {
+    "0.1": 0.9081650847328087,
+    "0.01": 0.47340969367745095,
+    "0.001": 0.08180310913835076
+  },
+  "prior_shift_example": {
+    "fitted_fake_share": 0.42108890420399725,
+    "calibrated_0.9_at_1_in_1000": 0.012234019312273345
+  },
+  "asvspoof2019_la": {
+    "clips": 4670,
+    "fakes": 4199,
+    "speakers": 67,
+    "eer": {
+      "estimate": 0.0490592998332936,
+      "low": 0.04106701788394194,
+      "high": 0.06132983314154202
+    },
+    "auc": {
+      "estimate": 0.9878304863810967,
+      "low": 0.9842993367053445,
+      "high": 0.9910196270305817
+    },
+    "tpr_at_1pct_fpr": {
+      "estimate": 0.8730650154798761,
+      "low": 0.8212534523474984,
+      "high": 0.924582338902148
+    },
+    "tpr_at_5pct_fpr": {
+      "estimate": 0.9509407001667064,
+      "low": 0.9297854029952809,
+      "high": 0.9629231246993986
+    },
+    "coverage": {
+      "genuine": {
+        "not_assessed": 45,
+        "of": 516,
+        "share": 0.0872093023255814
+      },
+      "synthetic": {
+        "not_assessed": 285,
+        "of": 4484,
+        "share": 0.0635593220338983
+      }
+    }
+  },
+  "conditions": {
+    "g711": {
+      "description": "landline call: G.711 mu-law, 8 kHz",
+      "metrics": {
+        "clips": 2535,
+        "fakes": 944,
+        "speakers": 42,
+        "eer": {
+          "estimate": 0.044626021370207415,
+          "low": 0.030355562928555617,
+          "high": 0.058358536616149655
+        },
+        "auc": {
+          "estimate": 0.9911878522195826,
+          "low": 0.9850948001384718,
+          "high": 0.9949584357029372
+        },
+        "tpr_at_1pct_fpr": {
+          "estimate": 0.8834745762711864,
+          "low": 0.8213940410418311,
+          "high": 0.9347699381131773
+        },
+        "tpr_at_5pct_fpr": {
+          "estimate": 0.9629237288135594,
+          "low": 0.9349757093343642,
+          "high": 0.98100315208949
+        }
+      },
+      "coverage": {
+        "genuine": {
+          "not_assessed": 319,
+          "of": 1910,
+          "share": 0.16701570680628272
+        },
+        "synthetic": {
+          "not_assessed": 146,
+          "of": 1090,
+          "share": 0.13394495412844037
+        }
+      },
+      "same_clips_clean": {
+        "eer": 0.03722084367245657,
+        "auc": 0.9922044093383394
+      },
+      "at_clean_dev_thresholds": {
+        "fpr": 0.011942174732872407,
+        "tpr": 0.899364406779661
+      },
+      "bands": {
+        "genuine": {
+          "likely_synthetic": 0.011942174732872407,
+          "uncertain": 0.051539912005028284,
+          "likely_genuine": 0.9365179132620993
+        },
+        "synthetic": {
+          "likely_synthetic": 0.899364406779661,
+          "uncertain": 0.06885593220338983,
+          "likely_genuine": 0.03177966101694915
+        }
+      }
+    },
+    "amr-nb": {
+      "description": "mobile call: AMR-NB 12.2 kbit/s, 8 kHz",
+      "metrics": {
+        "clips": 2496,
+        "fakes": 935,
+        "speakers": 42,
+        "eer": {
+          "estimate": 0.057014734144778985,
+          "low": 0.039173150235583584,
+          "high": 0.08976011994002998
+        },
+        "auc": {
+          "estimate": 0.9834433569595796,
+          "low": 0.9708569288759331,
+          "high": 0.9910479060544138
+        },
+        "tpr_at_1pct_fpr": {
+          "estimate": 0.839572192513369,
+          "low": 0.7707784435341484,
+          "high": 0.8962019986893839
+        },
+        "tpr_at_5pct_fpr": {
+          "estimate": 0.9336898395721925,
+          "low": 0.8812154855453825,
+          "high": 0.9682500875656742
+        }
+      },
+      "coverage": {
+        "genuine": {
+          "not_assessed": 349,
+          "of": 1910,
+          "share": 0.18272251308900522
+        },
+        "synthetic": {
+          "not_assessed": 155,
+          "of": 1090,
+          "share": 0.14220183486238533
+        }
+      },
+      "same_clips_clean": {
+        "eer": 0.03722084367245657,
+        "auc": 0.9922044093383394
+      },
+      "at_clean_dev_thresholds": {
+        "fpr": 0.03010890454836643,
+        "tpr": 0.9112299465240642
+      },
+      "bands": {
+        "genuine": {
+          "likely_synthetic": 0.03010890454836643,
+          "uncertain": 0.17232543241511852,
+          "likely_genuine": 0.7975656630365151
+        },
+        "synthetic": {
+          "likely_synthetic": 0.9112299465240642,
+          "uncertain": 0.06524064171122995,
+          "likely_genuine": 0.023529411764705882
+        }
+      }
+    },
+    "opus": {
+      "description": "VoIP call or voice note: Opus 12 kbit/s",
+      "metrics": {
+        "clips": 2526,
+        "fakes": 947,
+        "speakers": 42,
+        "eer": {
+          "estimate": 0.06124604012671597,
+          "low": 0.04795032092702679,
+          "high": 0.07848253615561533
+        },
+        "auc": {
+          "estimate": 0.9825220539111209,
+          "low": 0.9756396639344744,
+          "high": 0.9884100360541522
+        },
+        "tpr_at_1pct_fpr": {
+          "estimate": 0.7687434002111933,
+          "low": 0.6767178154597069,
+          "high": 0.8509972386092632
+        },
+        "tpr_at_5pct_fpr": {
+          "estimate": 0.9324181626187962,
+          "low": 0.8902383736361484,
+          "high": 0.9536494843284183
+        }
+      },
+      "coverage": {
+        "genuine": {
+          "not_assessed": 331,
+          "of": 1910,
+          "share": 0.17329842931937173
+        },
+        "synthetic": {
+          "not_assessed": 143,
+          "of": 1090,
+          "share": 0.13119266055045872
+        }
+      },
+      "same_clips_clean": {
+        "eer": 0.03722084367245657,
+        "auc": 0.9922044093383394
+      },
+      "at_clean_dev_thresholds": {
+        "fpr": 0.1013299556681444,
+        "tpr": 0.9588173178458289
+      },
+      "bands": {
+        "genuine": {
+          "likely_synthetic": 0.1013299556681444,
+          "uncertain": 0.25902469917669413,
+          "likely_genuine": 0.6396453451551615
+        },
+        "synthetic": {
+          "likely_synthetic": 0.9588173178458289,
+          "uncertain": 0.03484688489968321,
+          "likely_genuine": 0.006335797254487857
+        }
+      }
+    },
+    "mp3": {
+      "description": "compressed recording: MP3 32 kbit/s",
+      "metrics": {
+        "clips": 2558,
+        "fakes": 954,
+        "speakers": 42,
+        "eer": {
+          "estimate": 0.043640897755610975,
+          "low": 0.03317994505494504,
+          "high": 0.06061064272726923
+        },
+        "auc": {
+          "estimate": 0.9912005886750629,
+          "low": 0.9850667336121328,
+          "high": 0.9948686805050219
+        },
+        "tpr_at_1pct_fpr": {
+          "estimate": 0.8647798742138365,
+          "low": 0.7994974898523023,
+          "high": 0.9083137222406364
+        },
+        "tpr_at_5pct_fpr": {
+          "estimate": 0.960167714884696,
+          "low": 0.9333333333333333,
+          "high": 0.9789478059384495
+        }
+      },
+      "coverage": {
+        "genuine": {
+          "not_assessed": 306,
+          "of": 1910,
+          "share": 0.16020942408376965
+        },
+        "synthetic": {
+          "not_assessed": 136,
+          "of": 1090,
+          "share": 0.12477064220183487
+        }
+      },
+      "same_clips_clean": {
+        "eer": 0.03722084367245657,
+        "auc": 0.9922044093383394
+      },
+      "at_clean_dev_thresholds": {
+        "fpr": 0.018703241895261846,
+        "tpr": 0.9056603773584906
+      },
+      "bands": {
+        "genuine": {
+          "likely_synthetic": 0.018703241895261846,
+          "uncertain": 0.064214463840399,
+          "likely_genuine": 0.9170822942643392
+        },
+        "synthetic": {
+          "likely_synthetic": 0.9056603773584906,
+          "uncertain": 0.06918238993710692,
+          "likely_genuine": 0.025157232704402517
+        }
+      }
+    }
+  }
+}
