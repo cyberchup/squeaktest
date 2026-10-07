@@ -10,11 +10,12 @@ What each metric is for:
 - Calibration (reliability bins, ECE, Brier score): whether a score of 0.8 means 80%.
 - Bootstrap confidence intervals: how much a number could move with different test clips.
   Resampling whole speakers, not single clips, because clips of one speaker aren't independent.
+- Paired bootstrap: the same, for the difference between two models scored on the same clips.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -199,7 +200,45 @@ def bootstrap(
     class are skipped.
     """
     y, s = _validated(labels, scores)
-    rng = np.random.default_rng(seed)
+    values = [
+        metric(y[idx], s[idx])
+        for idx in _resamples(y, groups, n_resamples, np.random.default_rng(seed))
+    ]
+    return _interval(metric(y, s), values, confidence)
+
+
+def paired_bootstrap(
+    metric: Callable[[np.ndarray, np.ndarray], float],
+    labels: ArrayLike,
+    scores_a: ArrayLike,
+    scores_b: ArrayLike,
+    groups: Sequence[str] | np.ndarray | None = None,
+    n_resamples: int = 1000,
+    confidence: float = 0.95,
+    seed: int = 0,
+) -> Interval:
+    """A confidence interval for `metric(a) - metric(b)`, two models scored on the same clips.
+
+    Each resample scores both models on the same speakers, so how hard those speakers happen to
+    be cancels out of the difference. That is why two models' separate intervals can overlap
+    while the paired interval for their difference still excludes zero.
+    """
+    y, a = _validated(labels, scores_a)
+    _, b = _validated(labels, scores_b)
+    values = [
+        metric(y[idx], a[idx]) - metric(y[idx], b[idx])
+        for idx in _resamples(y, groups, n_resamples, np.random.default_rng(seed))
+    ]
+    return _interval(metric(y, a) - metric(y, b), values, confidence)
+
+
+def _resamples(
+    y: np.ndarray,
+    groups: Sequence[str] | np.ndarray | None,
+    n_resamples: int,
+    rng: np.random.Generator,
+) -> Iterator[np.ndarray]:
+    """Index arrays drawing whole groups with replacement, skipping single-class draws."""
     if groups is None:
         members = [np.array([i]) for i in range(y.size)]
     else:
@@ -207,15 +246,16 @@ def bootstrap(
         if g.size != y.size:
             raise ValueError("groups must have one entry per example")
         members = [np.flatnonzero(g == name) for name in np.unique(g)]
-    values = []
     for _ in range(n_resamples):
         picked = rng.integers(0, len(members), size=len(members))
         idx = np.concatenate([members[k] for k in picked])
-        if y[idx].min() == y[idx].max():
-            continue
-        values.append(metric(y[idx], s[idx]))
+        if y[idx].min() != y[idx].max():
+            yield idx
+
+
+def _interval(estimate: float, values: list[float], confidence: float) -> Interval:
     if not values:
         raise ValueError("no usable resamples: each one contained only one class")
     tail = (1.0 - confidence) / 2 * 100
     low, high = np.percentile(values, [tail, 100 - tail])
-    return Interval(estimate=metric(y, s), low=float(low), high=float(high))
+    return Interval(estimate=estimate, low=float(low), high=float(high))

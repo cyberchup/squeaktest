@@ -19,6 +19,7 @@ from squeaktest.metrics import (
     brier_score,
     eer,
     expected_calibration_error,
+    paired_bootstrap,
     precision_at_prevalence,
     reliability_bins,
     roc_auc,
@@ -212,3 +213,29 @@ def test_resampling_speakers_widens_intervals_when_clips_are_correlated():
 def test_bad_inputs_are_rejected(labels, scores):
     with pytest.raises(ValueError):
         eer(labels, scores)
+
+
+def test_paired_bootstrap_of_a_model_against_itself_is_exactly_zero():
+    labels = np.tile([0, 1], 50)
+    scores = np.linspace(0, 1, 100)
+    diff = paired_bootstrap(roc_auc, labels, scores, scores, n_resamples=100)
+    assert (diff.estimate, diff.low, diff.high) == (0.0, 0.0, 0.0)
+
+
+def test_paired_bootstrap_finds_a_difference_that_separate_intervals_hide():
+    # Speakers differ a lot in how hard they are, and both models share that difficulty.
+    # Model a is slightly better on every speaker.
+    rng = np.random.default_rng(1)
+    n_speakers, per_speaker = 20, 40
+    groups = np.repeat([f"s{i}" for i in range(n_speakers)], per_speaker)
+    labels = np.tile([0, 1], n_speakers * per_speaker // 2)
+    difficulty = np.repeat(rng.uniform(0.3, 3.0, n_speakers), per_speaker)
+    noise = rng.normal(0, 1, labels.size)
+    a = labels * difficulty * 1.15 + noise
+    b = labels * difficulty + noise
+    separate_a = bootstrap(roc_auc, labels, a, groups=groups, n_resamples=300)
+    separate_b = bootstrap(roc_auc, labels, b, groups=groups, n_resamples=300)
+    assert separate_b.high > separate_a.low  # the two intervals overlap
+    diff = paired_bootstrap(roc_auc, labels, a, b, groups=groups, n_resamples=300)
+    assert diff.estimate > 0
+    assert diff.low > 0  # but the paired interval excludes zero
