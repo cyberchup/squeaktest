@@ -5,6 +5,7 @@ The report never includes the input's filename or path, so it is safe to log or 
 
 from __future__ import annotations
 
+import textwrap
 from typing import TYPE_CHECKING, Any
 
 from squeaktest import __version__
@@ -15,8 +16,23 @@ if TYPE_CHECKING:
     from squeaktest.model import ModelSpec
 
 DISCLAIMER = "This score is an estimate. It must not be the sole basis for any decision."
-UNCALIBRATED = (
-    "Scores are not calibrated yet, so the bands are provisional (docs/decisions.md D9 and D14)."
+SCORE_NOTE = (
+    "The score is the model's raw output, not a probability. The bands are thresholds chosen "
+    "on development data, kept apart from the test data (docs/decisions.md D16 and D18)."
+)
+
+# Measured for the default model and its bands on In-the-Wild test speakers, clean and
+# re-encoded as Opus at 12 kbit/s. Source: eval/results/antideepfake-w2v-large/results.json;
+# tests/test_cli.py checks that these still match it.
+CLEAN_GENUINE_FLAGGED = 0.0007  # share of genuine clips rated likely synthetic
+OPUS_GENUINE_FLAGGED = 0.0861
+OPUS_ALERT_PRECISION_1_IN_100 = 0.101  # share of Opus alerts that are fakes, if 1% are fake
+OPUS_WARNING = (
+    "Opus audio (common in voice notes and VoIP calls) is a known weak spot. In testing at "
+    f"12 kbit/s, {OPUS_GENUINE_FLAGGED:.1%} of genuine clips were rated likely synthetic, "
+    f"against {CLEAN_GENUINE_FLAGGED:.1%} for uncompressed audio. If 1 recording in 100 were "
+    f"fake, about {1 - OPUS_ALERT_PRECISION_1_IN_100:.0%} of likely-synthetic results on Opus "
+    "audio would be false alarms. Higher bitrates were not tested. See docs/decisions.md K2."
 )
 
 BAND_LABELS = {
@@ -34,11 +50,21 @@ TOP_ROWS_FOR_LONG_CLIPS = 10
 def build_report(
     result: ClipResult, audio: Audio, spec: ModelSpec, config: WindowingConfig
 ) -> dict[str, Any]:
+    if spec.bands is None:
+        raise ValueError(f"{spec.name} has no band thresholds; it is for evaluation only")
+    warnings = []
+    if audio.codec == "opus":
+        warnings.append({"code": "opus_audio", "message": OPUS_WARNING})
     return {
-        "band": band_for(result.score),
+        "band": band_for(result.score, spec.bands),
         "score": _round(result.score),
         "calibrated": False,
         "note": result.note,
+        "warnings": warnings,
+        "bands": {
+            "likely_synthetic_at": spec.bands.likely_synthetic_at,
+            "likely_genuine_below": spec.bands.likely_genuine_below,
+        },
         "audio": {
             "duration_s": round(audio.duration_s, 3),
             "active_s": round(result.speech_s, 3),  # with sound: VAD cannot tell speech apart
@@ -78,6 +104,9 @@ def format_report(report: dict[str, Any]) -> str:
         f"Audio:    {audio['duration_s']:.1f} s, {audio['container']}/{audio['codec']}, "
         f"{audio['active_s']:.1f} s with sound"
     )
+    for warning in report["warnings"]:
+        wrapped = textwrap.wrap(warning["message"], width=80)
+        lines += [f"Warning:  {wrapped[0]}", *(f"          {line}" for line in wrapped[1:])]
     windows = report["windows"]
     if windows:
         scored = sum(w["score"] is not None for w in windows)
@@ -90,7 +119,7 @@ def format_report(report: dict[str, Any]) -> str:
         f"Model:    {model['name']} @ {model['revision'][:7]} ({model['license']})",
         "",
         DISCLAIMER,
-        UNCALIBRATED,
+        *textwrap.wrap(SCORE_NOTE, width=90),
     ]
     return "\n".join(lines)
 

@@ -16,12 +16,18 @@ import pytest
 import squeaktest.model
 from squeaktest.cli import EXIT_OK, EXIT_REJECTED, EXIT_SETUP, main
 from squeaktest.inference import BANDS
-from squeaktest.model import MMS_300M, ModelNotFoundError, weights_path
-from squeaktest.report import DISCLAIMER, MAX_TIMELINE_ROWS
+from squeaktest.model import DEFAULT_MODEL, MODELS, ModelNotFoundError, weights_path
+from squeaktest.report import DISCLAIMER, MAX_TIMELINE_ROWS, OPUS_WARNING
+
+SPEC = MODELS[DEFAULT_MODEL]
+assert SPEC.bands is not None
+SYNTHETIC = (SPEC.bands.likely_synthetic_at + 1.0) / 2
+UNCERTAIN = (SPEC.bands.likely_synthetic_at + SPEC.bands.likely_genuine_below) / 2
+GENUINE = SPEC.bands.likely_genuine_below / 2
 
 
 class FakeDetector:
-    spec = MMS_300M
+    spec = SPEC
 
     def __init__(self, score: float) -> None:
         self.score = score
@@ -51,7 +57,7 @@ def test_version(capsys: pytest.CaptureFixture[str]):
 
 @pytest.mark.parametrize(
     ("score", "label"),
-    [(0.95, "Likely synthetic"), (0.7, "Uncertain"), (0.1, "Likely genuine")],
+    [(SYNTHETIC, "Likely synthetic"), (UNCERTAIN, "Uncertain"), (GENUINE, "Likely genuine")],
 )
 def test_human_output_shows_band_score_and_disclaimer(
     audio_fixtures: dict[str, Path], fake_model, capsys, score: float, label: str
@@ -63,23 +69,83 @@ def test_human_output_shows_band_score_and_disclaimer(
     assert f"score {score:.2f}, uncalibrated" in out
     assert "Timeline (4 s windows every 2 s)" in out
     assert DISCLAIMER in out
-    assert "not calibrated yet" in out
+    assert "not a probability" in out
+    assert "Warning:" not in out
 
 
 def test_json_output_is_complete_and_parseable(audio_fixtures: dict[str, Path], fake_model, capsys):
-    fake_model(0.95)
+    fake_model(SYNTHETIC)
     assert main(["analyze", str(audio_fixtures["m4a_aac"]), "--json"]) == EXIT_OK
     report = json.loads(capsys.readouterr().out)
     assert report["band"] == "likely_synthetic"
-    assert report["score"] == pytest.approx(0.95)
+    assert report["score"] == pytest.approx(SYNTHETIC, abs=1e-4)
     assert report["calibrated"] is False
+    assert report["warnings"] == []
+    assert report["bands"] == {
+        "likely_synthetic_at": SPEC.bands.likely_synthetic_at,
+        "likely_genuine_below": SPEC.bands.likely_genuine_below,
+    }
     assert report["audio"]["container"] == "m4a"
     assert report["audio"]["codec"] == "aac"
     assert report["windowing"] == {"window_s": 4.0, "hop_s": 2.0, "aggregation": "top_3_mean"}
-    assert report["model"]["revision"] == MMS_300M.revision
+    assert report["model"]["name"] == DEFAULT_MODEL
+    assert report["model"]["revision"] == SPEC.revision
     assert report["model"]["license"] == "CC BY-NC-SA 4.0"
-    assert report["windows"] and all(w["score"] == pytest.approx(0.95) for w in report["windows"])
+    assert report["windows"]
+    assert all(w["score"] == pytest.approx(SYNTHETIC, abs=1e-4) for w in report["windows"])
     assert report["disclaimer"] == DISCLAIMER
+
+
+def test_opus_audio_carries_a_warning(audio_fixtures: dict[str, Path], fake_model, capsys):
+    fake_model(SYNTHETIC)
+    assert main(["analyze", str(audio_fixtures["ogg_opus"]), "--json"]) == EXIT_OK
+    report = json.loads(capsys.readouterr().out)
+    assert report["warnings"] == [{"code": "opus_audio", "message": OPUS_WARNING}]
+    assert main(["analyze", str(audio_fixtures["ogg_opus"])]) == EXIT_OK
+    assert "Warning:  Opus audio" in capsys.readouterr().out
+
+
+def test_vorbis_audio_in_the_same_container_has_no_warning(
+    audio_fixtures: dict[str, Path], fake_model, capsys
+):
+    fake_model(SYNTHETIC)
+    assert main(["analyze", str(audio_fixtures["ogg_vorbis"]), "--json"]) == EXIT_OK
+    assert json.loads(capsys.readouterr().out)["warnings"] == []
+
+
+def test_models_without_bands_are_refused():
+    from squeaktest.inference import ClipResult, WindowingConfig
+    from squeaktest.model import MMS_300M
+    from squeaktest.report import build_report
+
+    assert MMS_300M.bands is None
+    with pytest.raises(ValueError, match="evaluation only"):
+        build_report(ClipResult(0.5, (), 3.0), None, MMS_300M, WindowingConfig())  # type: ignore[arg-type]
+
+
+def test_published_numbers_match_the_evaluation_results():
+    """The bands and the Opus warning quote eval results; fail if they drift apart."""
+    import squeaktest.report as report
+
+    path = Path(__file__).parents[1] / "eval" / "results" / DEFAULT_MODEL / "results.json"
+    results = json.loads(path.read_text(encoding="utf-8"))
+    bands = results["bands"]
+    assert SPEC.bands.likely_synthetic_at == pytest.approx(
+        bands["thresholds"]["likely_synthetic_at"], abs=5e-4
+    )
+    assert SPEC.bands.likely_genuine_below == pytest.approx(
+        bands["thresholds"]["likely_genuine_below"], abs=5e-4
+    )
+    opus = results["conditions"]["opus"]
+    measured = {
+        "CLEAN_GENUINE_FLAGGED": bands["test"]["genuine"]["likely_synthetic"],
+        "OPUS_GENUINE_FLAGGED": opus["bands"]["genuine"]["likely_synthetic"],
+        "OPUS_ALERT_PRECISION_1_IN_100": opus["alerts"]["precision_at_prevalence"]["0.01"][
+            "estimate"
+        ],
+    }
+    for name, value in measured.items():
+        assert getattr(report, name) == pytest.approx(value, abs=5e-4), name
 
 
 def test_output_never_contains_the_filename(
@@ -201,8 +267,8 @@ def test_fetch_model_with_yes_downloads_without_asking(monkeypatch, capsys, tmp_
 
 
 @pytest.mark.skipif(
-    not weights_path(MMS_300M, squeaktest.config.Settings.from_env().data_dir).exists(),
-    reason="MMS-300M weights not downloaded (set SQUEAKTEST_DATA_DIR)",
+    not weights_path(SPEC, squeaktest.config.Settings.from_env().data_dir).exists(),
+    reason="default model's weights not downloaded (set SQUEAKTEST_DATA_DIR)",
 )
 def test_real_model_end_to_end(audio_fixtures: dict[str, Path], capsys):
     assert main(["analyze", str(audio_fixtures["mp3"]), "--json", "--device", "cpu"]) == EXIT_OK

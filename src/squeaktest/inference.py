@@ -12,8 +12,8 @@ The pipeline:
 5. Score the remaining windows in one batch, then combine the scores with a top-k mean.
 
 The reasons behind each default, and their effect on missed fakes, false positives and cost,
-are in docs/decisions.md. Scores here are raw model outputs, not calibrated probabilities;
-calibration comes in Phase 2.
+are in docs/decisions.md. Scores here are raw model outputs, not calibrated probabilities
+(D16 explains why squeaktest doesn't calibrate them).
 """
 
 from __future__ import annotations
@@ -30,21 +30,32 @@ from squeaktest.vad import speech_bounds, speech_fraction
 # in [0, 1], where higher means more likely synthetic. Batching lets a model run them together.
 WindowScorer = Callable[[Sequence[np.ndarray]], Sequence[float] | np.ndarray]
 
-# Provisional band thresholds on the raw, uncalibrated score (docs/decisions.md D14).
-# Phase 2 replaces them with thresholds chosen on dev data at a target false-positive rate.
-LIKELY_SYNTHETIC_AT = 0.90
-LIKELY_GENUINE_BELOW = 0.50
-
 BANDS = ("likely_synthetic", "uncertain", "likely_genuine", "not_assessed")
 
 
-def band_for(score: float | None) -> str:
+@dataclass(frozen=True)
+class BandThresholds:
+    """Where the bands start on one model's raw score.
+
+    Raw scores mean different things for different models, so each model gets its own
+    thresholds, chosen on development data (docs/decisions.md D18).
+    """
+
+    likely_synthetic_at: float
+    likely_genuine_below: float
+
+    def __post_init__(self) -> None:
+        if not 0.0 <= self.likely_genuine_below <= self.likely_synthetic_at <= 1.0:
+            raise ValueError("need 0 <= likely_genuine_below <= likely_synthetic_at <= 1")
+
+
+def band_for(score: float | None, thresholds: BandThresholds) -> str:
     """Map a clip score to a band. No score means "not assessed", never "likely genuine"."""
     if score is None:
         return "not_assessed"
-    if score >= LIKELY_SYNTHETIC_AT:
+    if score >= thresholds.likely_synthetic_at:
         return "likely_synthetic"
-    if score < LIKELY_GENUINE_BELOW:
+    if score < thresholds.likely_genuine_below:
         return "likely_genuine"
     return "uncertain"
 

@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from squeaktest.inference import (
+    BandThresholds,
     WindowingConfig,
     aggregate,
     analyze,
@@ -262,6 +263,9 @@ def test_invalid_config_is_rejected(kwargs):
 # --- Bands -------------------------------------------------------------------------------
 
 
+BANDS_FOR_TESTS = BandThresholds(likely_synthetic_at=0.9, likely_genuine_below=0.5)
+
+
 @pytest.mark.parametrize(
     ("score", "band"),
     [
@@ -275,4 +279,16 @@ def test_invalid_config_is_rejected(kwargs):
     ],
 )
 def test_band_thresholds(score, band):
-    assert band_for(score) == band
+    assert band_for(score, BANDS_FOR_TESTS) == band
+
+
+def test_equal_thresholds_leave_no_uncertain_band():
+    bands = BandThresholds(likely_synthetic_at=0.66, likely_genuine_below=0.66)
+    assert band_for(0.6599, bands) == "likely_genuine"
+    assert band_for(0.66, bands) == "likely_synthetic"
+
+
+@pytest.mark.parametrize(("synthetic_at", "genuine_below"), [(0.5, 0.9), (1.2, 0.5), (0.5, -0.1)])
+def test_band_thresholds_must_be_ordered_and_in_range(synthetic_at, genuine_below):
+    with pytest.raises(ValueError):
+        BandThresholds(likely_synthetic_at=synthetic_at, likely_genuine_below=genuine_below)

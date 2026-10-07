@@ -30,12 +30,14 @@ from safetensors.torch import load
 from torch import nn
 from transformers import Wav2Vec2Config, Wav2Vec2Model
 
+from squeaktest.inference import BandThresholds
+
 SAMPLE_RATE = 16_000
 
 
 @dataclass(frozen=True)
 class ModelSpec:
-    """Where a detector's weights come from, under what license, and its architecture."""
+    """Where a detector's weights come from, its license, its architecture and its bands."""
 
     name: str
     repo_id: str
@@ -54,6 +56,9 @@ class ModelSpec:
     norm_first: bool = True
     conv_norm: str = "layer"  # "layer" or "group"
     conv_bias: bool = True
+    # Chosen on In-the-Wild dev speakers by eval/analyze.py (docs/decisions.md D18). None for
+    # models kept only for evaluation: squeaktest won't put a band on their scores.
+    bands: BandThresholds | None = None
 
     @property
     def source_url(self) -> str:
@@ -86,6 +91,7 @@ W2V_LARGE = ModelSpec(
     num_layers=24,
     num_heads=16,
     intermediate_size=4096,
+    bands=BandThresholds(likely_synthetic_at=0.9515, likely_genuine_below=0.4856),
 )
 
 W2V_SMALL = ModelSpec(
@@ -106,7 +112,7 @@ W2V_SMALL = ModelSpec(
 )
 
 MODELS: dict[str, ModelSpec] = {m.name: m for m in (MMS_300M, W2V_LARGE, W2V_SMALL)}
-DEFAULT_MODEL = MMS_300M.name
+DEFAULT_MODEL = W2V_LARGE.name  # chosen in the Phase 2 bake-off (D17)
 
 
 class ModelNotFoundError(RuntimeError):
