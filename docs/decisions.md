@@ -2,8 +2,23 @@
 
 Each entry records what was chosen, why it beat the alternatives, what it does to detection
 quality, and when to revisit it. Numbers marked *toy* come from the synthetic-tone tests in
-`tests/test_inference.py`, not from real speech. None of these defaults has been tuned on
-real data yet; Phase 2 does that on the In-the-Wild dev split.
+`tests/test_inference.py`, not from real speech. D1-D15 were set before any real data was
+scored. D16 onward come from Phase 2, measured on In-the-Wild: dev speakers for choices, test
+speakers for reported numbers (see `eval/results/`).
+
+**Phase 2 revisit status:**
+
+| Entry | Planned check | Phase 2 outcome |
+|---|---|---|
+| D1 | Windows skipped under phone codecs | Not done; carried forward |
+| D2 | Activity bar 0.25 / 0.5 / 0.75 | Not done; carried forward |
+| D3 | 4 s versus 8 s windows | Not done; carried forward |
+| D5 | Accuracy against amount of speech | Done: 1 s kept (see D5) |
+| D6 | Mean, max and top-k | Done: top-3 kept (see D6) |
+| D9 | Calibration | Done: not calibrated (D16) |
+| D10 | Per-window versus whole-clip normalization | Not done; carried forward |
+| D14 | Data-driven bands | Done: replaced by D18 |
+| K1 | Tones and music | Not measured; still open |
 
 ## D1. Energy-based voice activity detection at -45 dBFS (step 3, `vad.py`)
 
@@ -93,8 +108,21 @@ up as a probability isn't.
 **Impact:** very short voicemails get no score. The output, and later the SIEM event, must
 report that state explicitly, so it's never mistaken for "likely genuine".
 
-**Revisit:** in Phase 2, measure accuracy against speech length on dev data, and set this
-minimum where accuracy stops collapsing.
+**Phase 2 result (W2V-Large, dev speakers, measured):**
+
+| Minimum | EER | Genuine not assessed | Synthetic not assessed |
+|---|---|---|---|
+| 0 s | 1.5% | 0.1% | 0.2% |
+| 0.5 s | 1.4% | 1.6% | 1.4% |
+| 1 s | 0.9% | 10.2% | 9.2% |
+| 1.5 s | 0.6% | 20.6% | 19.6% |
+| 2 s | 0.4% | 31.5% | 31.2% |
+
+Kept at 1 s (Dylan, 2026-10-07). Going from 0.5 s to 1 s cuts EER by about a third, at the
+cost of about 9% more clips unscored. Each further half second buys less accuracy and leaves
+about 10% more clips unscored. In-the-Wild is full of very short clips, so on the test speakers
+16.0% of genuine and 11.3% of fake clips get *Not assessed*. Voicemails are usually longer.
+Known gap K3 covers the short clips that do get scored.
 
 ## D6. Clip score = mean of the top 3 window scores (step 4)
 
@@ -124,8 +152,12 @@ minimum where accuracy stops collapsing.
 - Top-3 still rises somewhat with clip length (more windows give more chances for high scores),
   so Phase 2 calibration must check scores against clip length.
 
-**Revisit:** in Phase 2, compare mean, max and top-k on In-the-Wild (whole-clip fakes) and, if
-licensing allows, on a partial-spoof dataset such as PartialSpoof (license unverified).
+**Phase 2 result (W2V-Large, test speakers, measured):** mean, top-3 and max all give 1.3-1.4%
+EER and catch 98.3-98.4% of fakes at 1% false positives. As predicted, they agree on
+In-the-Wild, where every fake is a whole clip. Top-3 stays for the partial-fake case, which is
+still untested.
+
+**Revisit:** test on a partial-spoof dataset such as PartialSpoof (license unverified).
 
 ## D7. Check the scorer's output instead of trusting it (step 4)
 
@@ -174,6 +206,9 @@ quantity.
 EER threshold for this model ranging from 0.62 on In-the-Wild to 0.99 on Deepfake-Eval-2024: the
 same raw score means very different things in different domains. Until Phase 2 calibrates it,
 output must say "uncalibrated" and the bands must not be read as probabilities.
+
+**Phase 2 outcome:** the score stays uncalibrated (D16), and the output says it is not a
+probability.
 
 ## D10. Normalize each window on its own (step 5)
 
@@ -225,6 +260,8 @@ loading or a one-time conversion.
 
 ## D14. Provisional bands: likely synthetic at 0.90 and above, likely genuine below 0.50 (step 7)
 
+**Status:** replaced by D18 in Phase 2.
+
 **Decision:** `band_for` maps the raw clip score to *Likely synthetic* (0.90 and above),
 *Uncertain* (0.50 to 0.90) or *Likely genuine* (below 0.50). No score maps to *Not assessed*.
 
@@ -270,6 +307,155 @@ minute; free ZeroGPU would bring it near 1 s (research section 4.2).
 
 **Revisit:** startup time, if hosting moves to something that starts per request.
 
+## D16. Report the raw score; don't calibrate it (Phase 2)
+
+**Decision:** squeaktest reports the model's raw P(fake) (D9) without calibration. The output
+says the score is not a probability, and the bands (D18) carry the meaning.
+
+**Background:** a calibrated score means what it says: of all clips scored 0.8, about 80% are
+fake. Platt scaling is the standard fix. It fits a two-parameter curve that maps raw scores to
+observed frequencies, on data held apart from the test set. Because the curve only stretches the
+scores and never reorders them, it changes no detection metric (EER, AUC, detection rate at a
+fixed false-positive rate). It only changes what the number claims. Source: scikit-learn's
+[probability calibration guide](https://scikit-learn.org/stable/modules/calibration.html).
+
+**Evidence (measured; Platt fitted on dev speakers, measured on test speakers; lower is better):**
+
+| Model | ECE raw | ECE after Platt | Brier raw | Brier after Platt |
+|---|---|---|---|---|
+| W2V-Large | 0.004 | 0.009 | 0.010 | 0.011 |
+| MMS-300M | 0.004 | 0.010 | 0.014 | 0.015 |
+| W2V-Small | 0.018 | 0.012 | 0.025 | 0.023 |
+
+**Why:**
+- For the two large models, the raw score was already close to calibrated on In-the-Wild, and
+  Platt made it worse. There are only 11 dev speakers, so the fit learns their quirks rather
+  than a general rule (overfitting at the speaker level). W2V-Small improved, but it isn't the
+  default (D17).
+- Calibration only holds for one domain at one share of fakes. The dev set is 42% fake, but a
+  SOC queue is almost all genuine. Shifted to a 1-in-1,000 base rate, a "0.9" calibrated on this
+  dev set corresponds to about 1.2% (`prior_shift_example` in each `results.json`). An analyst
+  who reads 0.9 as "90% likely fake" would be misled even by a well-calibrated score.
+
+**Impact:** no change in detection quality, since calibration never reorders scores. The cost
+is that the number can't be read as a probability, so the output says so, and the README shows
+what alerts mean at realistic base rates.
+
+**Revisit:** with a larger, more varied dev set (such as Deepfake-Eval-2024 as dev data), or
+when the SIEM event (Phase 5) wants a probability at a configured base rate
+(`calibration.shift_prior` already implements the shift).
+
+## D17. Default model: AntiDeepfake Wav2Vec2-Large (Phase 2 bake-off)
+
+**Decision:** the default model changes from MMS-300M to W2V-Large (Dylan, 2026-10-07).
+
+**Evidence (measured, In-the-Wild test speakers; full tables and intervals in
+`eval/results/bakeoff.md`):**
+
+| | W2V-Large | MMS-300M | W2V-Small |
+|---|---|---|---|
+| EER, clean | 1.3% | 1.9% | 3.2% |
+| EER, G.711 / AMR-NB / Opus / MP3 | 2.3 / 4.3 / 6.1 / 2.2% | 2.5 / 4.5 / 9.9 / 3.2% | 4.5 / 5.7 / 6.1 / 4.4% |
+| Fakes caught at 1% FPR, clean | 98.3% | 96.8% | 92.3% |
+| Fakes caught at 1% FPR, Opus 12k | 73.7% | 6.2% | 76.9% |
+| EER, ASVspoof 2019 LA (seen in training) | 1.1% | 1.9% | 4.9% |
+| Weights | 1.27 GB | 1.27 GB | 0.38 GB |
+
+Paired speaker bootstrap, MMS-300M minus W2V-Large: clean EER +0.6 points (95% interval 0.0
+to +1.0, borderline); Opus EER +3.8 points (+1.1 to +5.7), and 67.5 points fewer fakes caught
+at 1% FPR (-73.8 to -20.1). Both Opus differences exclude zero.
+
+**Why:**
+- W2V-Large is best or tied on every English condition. Its largest margin is on Opus, the
+  worst condition for every model and common in voice notes and VoIP calls, and that margin is
+  well outside the noise.
+- It is the same size as MMS-300M (24 layers, 1024 wide), and costs the same to run. Measured
+  with `scripts/benchmark.py` on the D15 machine: 1.1 s per audio minute on GPU (peak memory
+  1.9 GB), 14.6 s on 6 CPU threads and 28.1 s on 2 (MMS-300M: 1.2, 14.3 and 24.8 s).
+- W2V-Small matches it on Opus but is clearly worse everywhere else (significantly worse EER on
+  clean, G.711 and MP3). Its one advantage is size, which could matter on the free CPU tier.
+
+**Impact:**
+- Fewer missed fakes and fewer false alarms on English audio in every tested condition.
+- **Unmeasured on other languages.** Every evaluation clip is English. MMS-300M's front-end was
+  pre-trained on over 1,400 languages, and NII reports it ahead of W2V-Large on Chinese (ADD2023
+  EER 7.9% versus 13.3%) and on DeepVoice (2.35% versus 4.44%). For non-English calls,
+  W2V-Large may be the weaker choice. The model card says so.
+- Bands are now per model (D18). MMS-300M and W2V-Small keep their code and parity tests for
+  evaluation, but have no bands, so the CLI won't report with them.
+
+**Revisit:** when a non-English held-out set is available, or if hosted CPU latency is too slow
+(then measure W2V-Small for the demo).
+
+## D18. Bands chosen on dev speakers under clean audio and all four codecs (Phase 2)
+
+**Decision:** for W2V-Large, *Likely synthetic* at raw score 0.9515 and above, *Likely genuine*
+below 0.4856, *Uncertain* in between (Dylan, 2026-10-07). `eval/analyze.py` chooses them on the
+11 dev speakers' clips, pooled with equal weight across clean audio and the G.711, AMR-NB, Opus
+and MP3 re-encodings (21,682 clips). The rule is symmetric: each "likely" band may hold at most
+1% of the other class in that pool. The thresholds live on the model's spec, because a raw
+score means something different for every model, and a test checks them against
+`results.json`.
+
+**Why:**
+- A threshold only holds for the kind of audio it was chosen on (the same lesson as D9 and
+  D16). Chosen on clean dev audio alone, both thresholds landed at 0.658, so there was no
+  *Uncertain* band at all, and 15.8% of genuine Opus test clips landed in *Likely synthetic*.
+- A SOC mostly receives phone calls and compressed voice notes, so the bands are chosen on audio
+  like that. Re-encoding the dev speakers keeps the test speakers untouched.
+- Equal weight per condition rather than a worst-case rule ("at most 1% on every codec"). On dev
+  data, the worst-case rule would put *Likely synthetic* at 0.993, which is set entirely by Opus,
+  and would cut the share of dev fakes reaching *Likely synthetic* from 97.3% to 93.1% on clean
+  audio and from 86.8% to 73.9% on AMR-NB.
+- The 1% rule matches the alert framing: *Likely synthetic* is an alert with a known
+  false-positive budget, and *Likely genuine* is a clearance with a known miss budget.
+
+**Impact (measured on test speakers; each cell shows clean-only thresholds → these thresholds):**
+
+| Test audio | Genuine rated *Likely synthetic* | Fakes rated *Likely synthetic* | Fakes rated *Likely genuine* |
+|---|---|---|---|
+| Clean | 0.6% → 0.1% | 97.7% → 94.2% | 2.3% → 1.8% |
+| G.711 | 0.6% → 0.1% | 95.2% → 90.4% | 4.8% → 3.5% |
+| AMR-NB | 4.4% → 0.3% | 95.8% → 86.7% | 4.2% → 3.3% |
+| Opus 12k | 15.8% → 8.6% | 98.1% → 95.7% | 1.9% → 1.5% |
+| MP3 32k | 0.9% → 0.1% | 95.0% → 89.8% | 5.0% → 3.6% |
+
+- False alarms drop in every condition, and fewer fakes reach *Likely genuine*. The cost is that
+  2-9% of fakes move from *Likely synthetic* into *Uncertain*. They are still surfaced, just not
+  as an alert.
+- **The dev set understated Opus.** On dev speakers, these thresholds put 3.4% of genuine Opus
+  clips in *Likely synthetic*; on test speakers it's 8.6%. How much Opus hurts varies a lot from
+  voice to voice, and 11 dev speakers didn't capture that spread. Known gap K2 carries the test
+  figure.
+- At a 1-in-1,000 base rate, about 58% of clean-audio alerts would be real fakes (speaker
+  bootstrap interval 36-100%; `eval/results/antideepfake-w2v-large/report.md`). On Opus, about 1%
+  would be.
+
+**Revisit:** with more dev speakers, or real phone recordings for dev data (such as ASVspoof 5's
+codec conditions). The thresholds have to be re-chosen whenever the model changes.
+
+## D19. Warn when the input is Opus (Phase 2)
+
+**Decision:** when the probe step identifies the codec as Opus, the report carries a warning
+(`warnings` in the JSON, code `opus_audio`) quoting the measured false-alarm rate (Dylan,
+2026-10-07).
+
+**Why:** Opus at 12 kbit/s is the weakest tested condition even after D18. 8.6% of genuine
+test clips land in *Likely synthetic*, so at realistic base rates most Opus alerts are false
+alarms. The codec is known exactly from the probe step, so the warning costs nothing and never
+fires by guesswork. The analyst sees the caveat next to the result it applies to, instead of in
+a README.
+
+**Impact:**
+- Covers only Opus in the file itself. Audio that went through Opus earlier (a voice note
+  re-saved as M4A, a VoIP call recorded to WAV) gets no warning. That case is documented in K2.
+- The numbers were measured at 12 kbit/s. Higher bitrates are probably less damaging but are
+  untested, and the warning says so.
+- A test fails if the quoted numbers drift from `results.json`.
+
+**Revisit:** when Opus is measured at other bitrates, or if another weak condition shows up in
+a format squeaktest accepts.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)
@@ -287,5 +473,46 @@ is false positives on real voicemails.
 **Options:** a speech-versus-non-speech check before scoring (a model-based VAD, or a simple
 tonality or music detector), or excluding windows that look tonal.
 
-**Status:** open. Measure it in Phase 2 on audio with tones and music, and fix it before any
-claim that squeaktest is ready for SOC use.
+**Status:** open. Not measured in Phase 2 (In-the-Wild has no tones or music to test with). A
+synthetic 300 Hz tone sent through the CLI after Phase 2 still scored 1.00, *Likely
+synthetic*. Fix it before any claim that squeaktest is ready for SOC use.
+
+### K2. Opus voice notes and VoIP audio cause false alarms (found in Phase 2)
+
+**Finding (measured, In-the-Wild test speakers re-encoded as Opus at 12 kbit/s):**
+
+| Model | EER (same clips clean) | Fakes caught at 1% FPR | Genuine rated *Likely synthetic* |
+|---|---|---|---|
+| W2V-Large (default, D18 bands) | 6.1% (1.6%) | 73.7% | 8.6% |
+| MMS-300M (clean-dev bands) | 9.9% (2.5%) | 6.2% | 30.5% |
+| W2V-Small (clean-dev bands) | 6.1% (3.7%) | 76.9% | 10.1% |
+
+Opus pushes genuine scores up for every model. The model ranking still separates real from fake
+reasonably well (AUC 0.984 for W2V-Large), but genuine clips move into the range where fakes
+sit. If 1 recording in 100 were fake, about 90% of W2V-Large's *Likely synthetic* results on
+Opus audio would be false alarms.
+
+**Why it matters for a SOC:** WhatsApp and Telegram voice notes use Opus, as do WebRTC-based
+calls (Opus is mandatory in WebRTC). That is a large share of what an analyst would check.
+
+**Mitigations in place:** D18 thresholds (genuine false alarms on Opus 15.8% → 8.6%) and the D19
+warning. **Not covered:** audio that was Opus earlier and was converted before it reached
+squeaktest, and bitrates other than 12 kbit/s.
+
+**Status:** open. The real fix is training the model on Opus-compressed audio (codec
+augmentation), which is a decision for the Phase 2 gate.
+
+### K3. Very short clips are less reliable (found in Phase 2)
+
+**Finding (measured, W2V-Large, clean test speakers):** EER is 5.1% for clips under 2 seconds,
+against 1.1% for 2-4 seconds, 0.4% for 4-8 seconds and 1.7% for 8 seconds and up (why longer
+clips do worse again is unexplained). Among genuine clips, shorter clips score
+higher (Spearman correlation between score and duration: -0.45), so short genuine clips are
+the ones most likely to be flagged.
+
+**Also checked:** duration alone, with no model, separates In-the-Wild's classes with AUC 0.62,
+because the dataset's fakes tend to be longer. The model's AUC is at least 0.985 in every
+duration bucket, so it isn't just reading length.
+
+**Status:** open. Options: a warning on clips under 2 seconds, or a higher minimum (D5 shows the
+coverage cost).
