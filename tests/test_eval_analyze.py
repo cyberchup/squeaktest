@@ -2,10 +2,20 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pytest
 
-from eval.analyze import Policy, band_table, choose_thresholds, clip_score, score_records
+from eval.analyze import (
+    Policy,
+    band_table,
+    choose_thresholds,
+    clip_score,
+    dev_threshold_pool,
+    score_records,
+)
 
 
 def record(label: int, margins: list[float | None], fractions=None, active_s=3.0, error=None):
@@ -72,3 +82,14 @@ def test_band_table_rows_sum_to_one():
     assert table["genuine"] == {"likely_synthetic": 0.0, "uncertain": 0.5, "likely_genuine": 0.5}
     assert table["synthetic"]["likely_synthetic"] == 0.5
     assert all(sum(row.values()) == pytest.approx(1.0) for row in table.values())
+
+
+def test_threshold_pool_adds_each_codec_scored_for_the_dev_speakers(tmp_path: Path):
+    dev_records = [record(0, [-2.0]), record(1, [3.0])]
+    dev = score_records(dev_records, Policy())
+    lines = "\n".join(json.dumps(r) for r in dev_records)
+    (tmp_path / "opus-dev.jsonl").write_text(lines, encoding="utf-8")
+    (tmp_path / "mp3-test-n3000.jsonl").write_text(lines, encoding="utf-8")  # test: never pooled
+    pool, fit_on = dev_threshold_pool(tmp_path, dev, Policy())
+    assert fit_on == ["clean", "opus"]
+    assert pool.labels.tolist() == [0, 1, 0, 1]

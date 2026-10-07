@@ -22,6 +22,20 @@ def _header(*names: str) -> list[str]:
     return [_row(*names), _row(*(["---"] * len(names)))]
 
 
+def _fit_on(bands: dict) -> str:
+    codecs = [c for c in bands["fit_on"] if c != "clean"]
+    if not codecs:
+        return f"Chosen on {bands['dev_clips']:,} clean dev clips."
+    return (
+        f"Chosen on {bands['dev_clips']:,} dev clips: the dev speakers' clips as clean audio and "
+        f"re-encoded as {', '.join(codecs)}, pooled with equal weight (decision D18)."
+    )
+
+
+def _change(before: dict, after: dict, cls: str, band: str) -> str:
+    return f"{_pct(before[cls][band])} → {_pct(after[cls][band])}"
+
+
 def write_report(r: dict, path: Path) -> None:
     t = r["test_clean"]
     cov = t["coverage"]
@@ -98,29 +112,71 @@ def write_report(r: dict, path: Path) -> None:
         "",
         "## Bands (thresholds chosen on dev, applied to test)",
         "",
-        f"*Likely synthetic* at raw score {th['likely_synthetic_at']:.3f} or above (at most "
+        f"{_fit_on(b)} *Likely synthetic* at raw score "
+        f"{th['likely_synthetic_at']:.3f} or above (at most "
         f"{_pct(rules['likely_synthetic_max_dev_fpr'])} of genuine dev clips). *Likely genuine* "
         f"below {th['likely_genuine_below']:.3f} (at least "
         f"{_pct(rules['likely_genuine_min_dev_fake_recall'])} of dev fakes stay above it).",
         "",
-        *_header("Test clips", "Likely synthetic", "Uncertain", "Likely genuine"),
+        *_header("Clean test clips", "Likely synthetic", "Uncertain", "Likely genuine"),
     ]
     for name in ("genuine", "synthetic"):
         row = b["test"][name]
         cells = (_pct(row[k]) for k in ("likely_synthetic", "uncertain", "likely_genuine"))
         lines.append(_row(name.capitalize(), *cells))
 
-    op = b["test_at_synthetic_threshold"]
+    if len(b["fit_on"]) > 1:
+        old = b["thresholds_clean_dev_only"]
+        lines += [
+            "",
+            "### What fitting on codecs changed",
+            "",
+            "Clean dev clips alone would put *likely synthetic* at "
+            f"{old['likely_synthetic_at']:.3f} and *likely genuine* below "
+            f"{old['likely_genuine_below']:.3f}. Each cell shows clean-only thresholds → the "
+            "thresholds above.",
+            "",
+            *_header(
+                "Test audio",
+                "Genuine rated likely synthetic",
+                "Fakes rated likely synthetic",
+                "Fakes rated likely genuine",
+            ),
+        ]
+        pairs = [("clean", b["test_clean_dev_only"], b["test"])] + [
+            (cnd["description"], cnd["bands_clean_dev_only"], cnd["bands"])
+            for cnd in r["conditions"].values()
+        ]
+        for label, before, after in pairs:
+            lines.append(
+                _row(
+                    label,
+                    _change(before, after, "genuine", "likely_synthetic"),
+                    _change(before, after, "synthetic", "likely_synthetic"),
+                    _change(before, after, "synthetic", "likely_genuine"),
+                )
+            )
+
+    op = b["test_alerts"]
     lines += [
         "",
-        f"At the *likely synthetic* threshold: test false-positive rate {_pct(op['fpr'])}, "
-        f"detection rate {_pct(op['tpr'])}. Share of alerts that would be real fakes at different "
-        "base rates:",
+        "### What an alert means",
         "",
-        *_header("Share of recordings that are fake", "Share of alerts that are fakes"),
+        f"At the *likely synthetic* threshold, on clean test audio: false-positive rate "
+        f"{_ci(op['fpr'])}, detection rate {_ci(op['tpr'])}. Share of *likely synthetic* alerts "
+        "that would be real fakes, if this share of recordings were fake:",
+        "",
     ]
-    for prevalence, precision in r["base_rates"].items():
-        lines.append(_row(f"{float(prevalence):g}", _pct(precision)))
+    columns = [("clean", op)] + [(name, c["alerts"]) for name, c in r["conditions"].items()]
+    lines += _header("Share fake", *(name for name, _ in columns))
+    for prevalence in op["precision_at_prevalence"]:
+        cells = (_ci(a["precision_at_prevalence"][prevalence]) for _, a in columns)
+        lines.append(_row(f"1 in {round(1 / float(prevalence)):,}", *cells))
+    lines.append("")
+    lines.append(
+        "Codec columns use the 3,000-clip test sample (about 1,600 scored genuine clips each), "
+        "so their intervals are wider."
+    )
 
     if "asvspoof2019_la" in r:
         a = r["asvspoof2019_la"]
@@ -148,7 +204,8 @@ def write_report(r: dict, path: Path) -> None:
             "Same clips, clean",
             "AUC",
             "Fakes caught at 1% FPR",
-            "Genuine flagged at clean threshold",
+            "Genuine rated likely synthetic",
+            "Fakes rated likely genuine",
         )
         for cnd in r["conditions"].values():
             m = cnd["metrics"]
@@ -159,7 +216,8 @@ def write_report(r: dict, path: Path) -> None:
                     _pct(cnd["same_clips_clean"]["eer"]),
                     f"{m['auc']['estimate']:.3f}",
                     _pct(m["tpr_at_1pct_fpr"]["estimate"]),
-                    _pct(cnd["at_clean_dev_thresholds"]["fpr"]),
+                    _pct(cnd["bands"]["genuine"]["likely_synthetic"]),
+                    _pct(cnd["bands"]["synthetic"]["likely_genuine"]),
                 )
             )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

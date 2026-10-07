@@ -55,20 +55,24 @@ Platt scaling: a = 1.536, b = -1.356, fitted on dev data that is 42.1% fake.
 
 ## Bands (thresholds chosen on dev, applied to test)
 
-*Likely synthetic* at raw score 0.664 or above (at most 1.0% of genuine dev clips). *Likely genuine* below 0.642 (at least 99.0% of dev fakes stay above it).
+Chosen on 4,353 clean dev clips. *Likely synthetic* at raw score 0.664 or above (at most 1.0% of genuine dev clips). *Likely genuine* below 0.642 (at least 99.0% of dev fakes stay above it).
 
-| Test clips | Likely synthetic | Uncertain | Likely genuine |
+| Clean test clips | Likely synthetic | Uncertain | Likely genuine |
 | --- | --- | --- | --- |
 | Genuine | 1.0% | 0.0% | 99.0% |
 | Synthetic | 96.8% | 0.1% | 3.1% |
 
-At the *likely synthetic* threshold: test false-positive rate 1.0%, detection rate 96.8%. Share of alerts that would be real fakes at different base rates:
+### What an alert means
 
-| Share of recordings that are fake | Share of alerts that are fakes |
-| --- | --- |
-| 0.1 | 91.5% |
-| 0.01 | 49.6% |
-| 0.001 | 8.9% |
+At the *likely synthetic* threshold, on clean test audio: false-positive rate 1.0% (0.6% to 1.5%), detection rate 96.8% (94.6% to 98.3%). Share of *likely synthetic* alerts that would be real fakes, if this share of recordings were fake:
+
+| Share fake | clean | g711 | amr-nb | opus | mp3 |
+| --- | --- | --- | --- | --- | --- |
+| 1 in 10 | 91.5% (88.1% to 94.3%) | 94.3% (90.7% to 98.3%) | 75.5% (63.8% to 84.6%) | 26.3% (20.7% to 37.9%) | 90.2% (84.8% to 95.8%) |
+| 1 in 100 | 49.6% (40.1% to 60.2%) | 60.0% (46.9% to 84.4%) | 21.9% (13.8% to 33.4%) | 3.1% (2.3% to 5.3%) | 45.6% (33.6% to 67.3%) |
+| 1 in 1,000 | 8.9% (6.2% to 13.1%) | 13.0% (8.0% to 34.9%) | 2.7% (1.6% to 4.7%) | 0.3% (0.2% to 0.5%) | 7.7% (4.8% to 16.9%) |
+
+Codec columns use the 3,000-clip test sample (about 1,900 genuine clips each), so their intervals are wider.
 
 ## In-domain reference: ASVspoof 2019 LA eval (5,000-clip sample)
 
@@ -81,9 +85,9 @@ data, a ceiling for comparison rather than a held-out result.
 
 ## Phone and compression conditions (3,000-clip test sample)
 
-| Condition | EER | Same clips, clean | AUC | Fakes caught at 1% FPR | Genuine flagged at clean threshold |
-| --- | --- | --- | --- | --- | --- |
-| landline call: G.711 mu-law, 8 kHz | 2.5% (1.6% to 3.6%) | 2.5% | 0.996 | 95.2% | 0.6% |
-| mobile call: AMR-NB 12.2 kbit/s, 8 kHz | 4.5% (3.1% to 6.6%) | 2.5% | 0.991 | 88.4% | 3.4% |
-| VoIP call or voice note: Opus 12 kbit/s | 9.9% (6.5% to 13.4%) | 2.5% | 0.950 | 6.2% | 30.5% |
-| compressed recording: MP3 32 kbit/s | 3.2% (2.0% to 4.6%) | 2.5% | 0.995 | 93.0% | 1.1% |
+| Condition | EER | Same clips, clean | AUC | Fakes caught at 1% FPR | Genuine rated likely synthetic | Fakes rated likely genuine |
+| --- | --- | --- | --- | --- | --- | --- |
+| landline call: G.711 mu-law, 8 kHz | 2.5% (1.6% to 3.6%) | 2.5% | 0.996 | 95.2% | 0.6% | 6.4% |
+| mobile call: AMR-NB 12.2 kbit/s, 8 kHz | 4.5% (3.1% to 6.6%) | 2.5% | 0.991 | 88.4% | 3.4% | 5.8% |
+| VoIP call or voice note: Opus 12 kbit/s | 9.9% (6.5% to 13.4%) | 2.5% | 0.950 | 6.2% | 30.5% | 1.8% |
+| compressed recording: MP3 32 kbit/s | 3.2% (2.0% to 4.6%) | 2.5% | 0.995 | 93.0% | 1.1% | 6.3% |

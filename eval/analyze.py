@@ -6,8 +6,9 @@ Reads the score files written by eval.score and writes eval/results/<model>/:
 results.json (every number), report.md (tables) and plots.
 
 Discipline (CLAUDE.md, Evaluation discipline):
-- Choices are made on the dev speakers only: the Platt calibration, the band thresholds and
-  the minimum-speech rule. Test speakers are only ever used to report.
+- Choices are made on the dev speakers only: the Platt calibration, the band thresholds (on
+  the dev speakers' clips under every codec, D18) and the minimum-speech rule. Test speakers
+  are only ever used to report.
 - Confidence intervals resample whole speakers, since clips of one speaker aren't independent.
 - Clips the product wouldn't score ("not assessed") are left out of the metrics and reported
   separately, per class, so coverage is visible instead of silently dropped.
@@ -44,6 +45,7 @@ RESULTS_DIR = Path(__file__).parent / "results"
 SYNTHETIC_BAND_MAX_FPR = 0.01  # "likely synthetic" may flag at most 1% of genuine dev clips
 GENUINE_BAND_MIN_RECALL = 0.99  # "likely genuine" may hold at most 1% of fake dev clips
 DURATION_BUCKETS = [(0, 2), (2, 4), (4, 8), (8, 1e9)]
+PREVALENCES = (0.1, 0.01, 0.001)  # share of recordings that are fake, for the alert view
 
 
 @dataclass(frozen=True)
@@ -189,12 +191,55 @@ def band_table(labels: np.ndarray, probs: np.ndarray, thresholds: dict) -> dict:
     return table
 
 
-def at_threshold(labels: np.ndarray, probs: np.ndarray, threshold: float) -> dict:
-    flagged = probs >= threshold
+def alerts(d: Scored, threshold: float, n_boot: int) -> dict:
+    """What a "likely synthetic" alert means, with speaker-bootstrap intervals.
+
+    The false-positive rate here can rest on a handful of genuine clips, and the share of
+    alerts that are real fakes at a low base rate hinges on it, so the intervals matter more
+    than the estimates.
+    """
+
+    def ci(metric) -> dict:
+        return asdict(bootstrap(metric, d.labels, d.scores, groups=d.speakers, n_resamples=n_boot))
+
+    def rates(y: np.ndarray, s: np.ndarray) -> tuple[float, float]:
+        flagged = s >= threshold
+        return float(flagged[y == 1].mean()), float(flagged[y == 0].mean())
+
+    def precision(prevalence: float) -> Callable[[np.ndarray, np.ndarray], float]:
+        return lambda y, s: precision_at_prevalence(*rates(y, s), prevalence)
+
     return {
-        "fpr": float(flagged[labels == 0].mean()),
-        "tpr": float(flagged[labels == 1].mean()),
+        "tpr": ci(lambda y, s: rates(y, s)[0]),
+        "fpr": ci(lambda y, s: rates(y, s)[1]),
+        "precision_at_prevalence": {f"{p:g}": ci(precision(p)) for p in PREVALENCES},
     }
+
+
+def dev_threshold_pool(scores_dir: Path, dev: Scored, policy: Policy) -> tuple[Scored, list[str]]:
+    """Dev clips under every condition scored for the dev speakers, pooled (decision D18).
+
+    The bands are meant for the audio a SOC receives, which is mostly phone calls and
+    compressed voice notes, so the thresholds are chosen on dev speakers under those codecs as
+    well as clean. Each condition holds the same dev clips, so each gets equal weight.
+    Conditions that weren't scored for the dev speakers are left out, and the result says so.
+    """
+    parts, fit_on = [dev], ["clean"]
+    for name in CONDITIONS:
+        path = scores_dir / f"{name}-dev.jsonl"
+        if name != "clean" and path.exists():
+            parts.append(score_records(load_records(path), policy))
+            fit_on.append(name)
+    pooled = Scored(
+        np.concatenate([p.ids for p in parts]),
+        np.concatenate([p.labels for p in parts]),
+        np.concatenate([p.scores for p in parts]),
+        np.concatenate([p.speakers for p in parts]),
+        np.concatenate([p.durations for p in parts]),
+        {},
+        {},
+    )
+    return pooled, fit_on
 
 
 def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
@@ -282,20 +327,24 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
 
     # 6. Bands: thresholds chosen on dev, reported on test
     # Bands use raw scores: the dev-fitted calibration made test calibration worse (D16).
-    thresholds = choose_thresholds(dev.labels, dev.scores)
+    # Thresholds from clean dev clips alone are kept for comparison, to show what pooling the
+    # codecs in (D18) costs on clean audio and buys on compressed audio.
+    pool, fit_on = dev_threshold_pool(scores_dir, dev, policy)
+    thresholds = choose_thresholds(pool.labels, pool.scores)
+    clean_only = choose_thresholds(dev.labels, dev.scores)
     t_syn = thresholds["likely_synthetic_at"]
     results["bands"] = {
+        "fit_on": fit_on,
+        "dev_clips": int(pool.labels.size),
         "thresholds": thresholds,
+        "thresholds_clean_dev_only": clean_only,
         "rules": {
             "likely_synthetic_max_dev_fpr": SYNTHETIC_BAND_MAX_FPR,
             "likely_genuine_min_dev_fake_recall": GENUINE_BAND_MIN_RECALL,
         },
         "test": band_table(test.labels, test.scores, thresholds),
-        "test_at_synthetic_threshold": at_threshold(test.labels, test.scores, t_syn),
-    }
-    op = results["bands"]["test_at_synthetic_threshold"]
-    results["base_rates"] = {
-        f"{p:g}": precision_at_prevalence(op["tpr"], op["fpr"], p) for p in (0.1, 0.01, 0.001)
+        "test_clean_dev_only": band_table(test.labels, test.scores, clean_only),
+        "test_alerts": alerts(test, t_syn, n_boot),
     }
     fitted_share = calibrator.fitted_fake_share
     results["prior_shift_example"] = {
@@ -333,8 +382,9 @@ def analyze(data_dir: Path, model: str, n_boot: int = 1000) -> dict:
                 "eer": _eer(paired_clean.labels, paired_clean.scores),
                 "auc": roc_auc(paired_clean.labels, paired_clean.scores),
             },
-            "at_clean_dev_thresholds": at_threshold(cond.labels, cond.scores, t_syn),
             "bands": band_table(cond.labels, cond.scores, thresholds),
+            "bands_clean_dev_only": band_table(cond.labels, cond.scores, clean_only),
+            "alerts": alerts(cond, t_syn, n_boot // 2),
         }
     return results
 

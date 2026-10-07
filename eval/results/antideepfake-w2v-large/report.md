@@ -55,20 +55,36 @@ Platt scaling: a = 1.161, b = -1.372, fitted on dev data that is 42.1% fake.
 
 ## Bands (thresholds chosen on dev, applied to test)
 
-*Likely synthetic* at raw score 0.658 or above (at most 1.0% of genuine dev clips). *Likely genuine* below 0.658 (at least 99.0% of dev fakes stay above it).
+Chosen on 21,682 dev clips: the dev speakers' clips as clean audio and re-encoded as g711, amr-nb, opus, mp3, pooled with equal weight (decision D18). *Likely synthetic* at raw score 0.951 or above (at most 1.0% of genuine dev clips). *Likely genuine* below 0.486 (at least 99.0% of dev fakes stay above it).
 
-| Test clips | Likely synthetic | Uncertain | Likely genuine |
+| Clean test clips | Likely synthetic | Uncertain | Likely genuine |
 | --- | --- | --- | --- |
-| Genuine | 0.6% | 0.0% | 99.4% |
-| Synthetic | 97.7% | 0.0% | 2.3% |
+| Genuine | 0.1% | 0.8% | 99.1% |
+| Synthetic | 94.2% | 4.0% | 1.8% |
 
-At the *likely synthetic* threshold: test false-positive rate 0.6%, detection rate 97.7%. Share of alerts that would be real fakes at different base rates:
+### What fitting on codecs changed
 
-| Share of recordings that are fake | Share of alerts that are fakes |
-| --- | --- |
-| 0.1 | 94.9% |
-| 0.01 | 62.9% |
-| 0.001 | 14.4% |
+Clean dev clips alone would put *likely synthetic* at 0.658 and *likely genuine* below 0.658. Each cell shows clean-only thresholds → the thresholds above.
+
+| Test audio | Genuine rated likely synthetic | Fakes rated likely synthetic | Fakes rated likely genuine |
+| --- | --- | --- | --- |
+| clean | 0.6% → 0.1% | 97.7% → 94.2% | 2.3% → 1.8% |
+| landline call: G.711 mu-law, 8 kHz | 0.6% → 0.1% | 95.2% → 90.4% | 4.8% → 3.5% |
+| mobile call: AMR-NB 12.2 kbit/s, 8 kHz | 4.4% → 0.3% | 95.8% → 86.7% | 4.2% → 3.3% |
+| VoIP call or voice note: Opus 12 kbit/s | 15.8% → 8.6% | 98.1% → 95.7% | 1.9% → 1.5% |
+| compressed recording: MP3 32 kbit/s | 0.9% → 0.1% | 95.0% → 89.8% | 5.0% → 3.6% |
+
+### What an alert means
+
+At the *likely synthetic* threshold, on clean test audio: false-positive rate 0.1% (0.0% to 0.2%), detection rate 94.2% (90.7% to 96.6%). Share of *likely synthetic* alerts that would be real fakes, if this share of recordings were fake:
+
+| Share fake | clean | g711 | amr-nb | opus | mp3 |
+| --- | --- | --- | --- | --- | --- |
+| 1 in 10 | 99.3% (98.4% to 100.0%) | 99.4% (97.6% to 100.0%) | 96.8% (92.1% to 99.2%) | 55.2% (43.2% to 74.1%) | 99.4% (98.0% to 100.0%) |
+| 1 in 100 | 93.2% (85.1% to 100.0%) | 93.6% (78.9% to 100.0%) | 73.2% (51.6% to 91.5%) | 10.1% (6.5% to 20.6%) | 93.6% (81.5% to 100.0%) |
+| 1 in 1,000 | 57.6% (36.1% to 100.0%) | 59.0% (27.1% to 100.0%) | 21.3% (9.5% to 51.7%) | 1.1% (0.7% to 2.5%) | 59.1% (30.4% to 100.0%) |
+
+Codec columns use the 3,000-clip test sample (about 1,900 genuine clips each), so their intervals are wider.
 
 ## In-domain reference: ASVspoof 2019 LA eval (5,000-clip sample)
 
@@ -81,9 +97,9 @@ data, a ceiling for comparison rather than a held-out result.
 
 ## Phone and compression conditions (3,000-clip test sample)
 
-| Condition | EER | Same clips, clean | AUC | Fakes caught at 1% FPR | Genuine flagged at clean threshold |
-| --- | --- | --- | --- | --- | --- |
-| landline call: G.711 mu-law, 8 kHz | 2.3% (1.6% to 3.5%) | 1.6% | 0.998 | 96.1% | 0.6% |
-| mobile call: AMR-NB 12.2 kbit/s, 8 kHz | 4.3% (2.8% to 7.0%) | 1.6% | 0.993 | 90.3% | 4.4% |
-| VoIP call or voice note: Opus 12 kbit/s | 6.1% (3.7% to 9.1%) | 1.6% | 0.984 | 73.7% | 15.8% |
-| compressed recording: MP3 32 kbit/s | 2.2% (1.2% to 3.7%) | 1.6% | 0.998 | 95.9% | 0.9% |
+| Condition | EER | Same clips, clean | AUC | Fakes caught at 1% FPR | Genuine rated likely synthetic | Fakes rated likely genuine |
+| --- | --- | --- | --- | --- | --- | --- |
+| landline call: G.711 mu-law, 8 kHz | 2.3% (1.6% to 3.5%) | 1.6% | 0.998 | 96.1% | 0.1% | 3.5% |
+| mobile call: AMR-NB 12.2 kbit/s, 8 kHz | 4.3% (2.8% to 7.0%) | 1.6% | 0.993 | 90.3% | 0.3% | 3.3% |
+| VoIP call or voice note: Opus 12 kbit/s | 6.1% (3.7% to 9.1%) | 1.6% | 0.984 | 73.7% | 8.6% | 1.5% |
+| compressed recording: MP3 32 kbit/s | 2.2% (1.2% to 3.7%) | 1.6% | 0.998 | 95.9% | 0.1% | 3.6% |
