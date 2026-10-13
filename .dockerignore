@@ -1,0 +1,9 @@
+# Allowlist: the image gets only what it needs to install the package. Everything else
+# (datasets, weights, eval results, .git, local settings) stays out of the build context.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!src/
+**/__pycache__

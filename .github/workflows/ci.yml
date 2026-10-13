@@ -32,3 +32,15 @@ jobs:
         run: uv run bandit -r src
       - name: pip-audit (all locked dependencies, PyTorch included)
         run: uv run python scripts/audit_deps.py
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # WEIGHTS=mounted keeps the 1.27 GB model out of CI; the smoke test doesn't need it.
+      - name: Build the image
+        run: docker build --build-arg WEIGHTS=mounted -t squeaktest:ci .
+      - name: Smoke-test the image
+        run: sh scripts/check_image.sh docker squeaktest:ci

@@ -1,0 +1,32 @@
+# Local run: `docker compose up`, then open http://127.0.0.1:8000
+#
+# Uses the model you already downloaded with `squeaktest fetch-model`: set SQUEAKTEST_DATA_DIR
+# to that folder (the one holding models/). It is mounted read-only.
+services:
+  squeaktest:
+    build:
+      context: .
+      args:
+        WEIGHTS: mounted
+    image: squeaktest:local
+    ports:
+      - "127.0.0.1:8000:7860"  # this machine only
+    volumes:
+      - type: bind
+        source: ${SQUEAKTEST_DATA_DIR:?set SQUEAKTEST_DATA_DIR to the folder holding models/}/models
+        target: /opt/squeaktest-data/models
+        read_only: true
+    # Hardening: nothing in the container is writable except a small /tmp held in memory,
+    # no Linux capabilities, no privilege escalation, and fixed resource limits.
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    cpus: 2
+    mem_limit: 6g
+    pids_limit: 256
+    environment:
+      OMP_NUM_THREADS: "2"  # match the CPU limit; PyTorch can't see it otherwise
