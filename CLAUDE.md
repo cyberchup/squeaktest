@@ -61,7 +61,7 @@ Confirmed (Phase 0 sign-off, 2026-09-30):
 - Python 3.12, managed with `uv`
 - License: MIT for the code (matches promptbadger)
 - PyTorch, with models loaded through Hugging Face `transformers`. Weights are ported from the official checkpoints; never depend on fairseq. Audio is resampled to 16 kHz mono.
-- Initial model: NII AntiDeepfake MMS-300M. Phase 2 bake-off shortlist: AntiDeepfake MMS-300M, Wav2Vec2-Large and Wav2Vec2-Small, plus TCM. See `docs/research.md`.
+- Default model: NII AntiDeepfake Wav2Vec2-Large, chosen in the Phase 2 bake-off over MMS-300M and Wav2Vec2-Small, which stay for evaluation only (D17). TCM was shortlisted but not run (D21). See `docs/research.md` and `docs/decisions.md`.
 - The AntiDeepfake weights are CC BY-NC-SA 4.0, so squeaktest and squeaktest.com stay non-commercial, and any fine-tuned weights inherit that license. State this in the README and model card.
 - Tooling: `ruff` for lint and format, `pytest`, type hints throughout
 - Packaging: `pyproject.toml` with a CLI entry point `squeaktest`
@@ -109,14 +109,14 @@ This field moves fast, so do not rely on memory. Research the current landscape 
 
 Then stop and get Dylan's sign-off.
 
-**Phase 1 (v0.1): CLI inference.**
+**Phase 1 (v0.1): CLI inference (done).**
 `squeaktest analyze clip.wav` loads and validates the file, chunks it into windows, scores each window, and prints an aggregate score, a band, and per-segment scores. Include plain JSON output. (The SIEM event was moved to Phase 5 on 2026-10-01.)
 - Set up CI (ruff, pytest, pip-audit, bandit) with the first code commit.
 - Build the input security into `audio.py` now, since the CLI is an input surface too: content sniffing, size and duration limits, decode timeouts. Test with synthetic fixtures.
 - Label scores as uncalibrated until Phase 2 calibrates them.
 - Measure CPU and GPU latency and memory per minute of audio.
 
-**Phase 2 (v0.2): Evaluation harness and model bake-off.**
+**Phase 2 (v0.2): Evaluation harness and model bake-off (done; gate decided 2026-10-13: ship with documented limits, D20).**
 - Evaluate on an in-domain set, at least one out-of-domain set, and compressed versions of them (low-bitrate MP3, Opus, simulated phone line).
 - Report the metrics listed under Evaluation discipline.
 - Run the shortlisted models through the same harness and pick one with evidence.

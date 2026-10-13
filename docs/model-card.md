@@ -17,7 +17,7 @@ was measured by squeaktest unless it says *reported by NII*. The format follows
 | Runtime | Hugging Face `transformers`, not NII's fairseq code. Outputs match NII's code within 7e-6 (logits) on five test signals ([D8](decisions.md)) |
 | Input | Any wav, mp3, flac, ogg or m4a file, decoded by ffmpeg to 16 kHz mono |
 | Output | A band (*Likely synthetic*, *Uncertain*, *Likely genuine* or *Not assessed*), a raw score from 0 to 1, and a score for each 4-second window |
-| Chosen | Phase 2 bake-off, 2026-10-07 ([D17](decisions.md)), over AntiDeepfake MMS-300M and Wav2Vec2-Small |
+| Chosen | Phase 2 bake-off, 2026-10-07 ([D17](decisions.md)), over AntiDeepfake MMS-300M and Wav2Vec2-Small. TCM, also shortlisted, wasn't run ([D21](decisions.md)). Shipped unchanged with its limits documented ([D20](decisions.md)) |
 
 **The pipeline:** trim leading and trailing silence; refuse to score clips with under 1 second
 of sound; cut 4-second windows every 2 seconds; skip windows that are mostly silent; score each

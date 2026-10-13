@@ -153,7 +153,7 @@ Trade-offs:
 1. **AntiDeepfake MMS-300M:** the initial model, multilingual.
 2. **AntiDeepfake Wav2Vec2-Large:** best reported In-the-Wild result, English front-end. Same code path as 1.
 3. **AntiDeepfake Wav2Vec2-Small:** 95M parameters, about 3× cheaper. This is the free-tier fallback. Same code path.
-4. **TCM:** MIT license, trained only on ASVspoof 2019. It is the permissive fallback, and it shows how much training-data diversity buys.
+4. **TCM:** MIT license, trained only on ASVspoof 2019. It is the permissive fallback, and it shows how much training-data diversity buys. *(Not run in Phase 2; see [D21](decisions.md).)*
 
 Optional: AASIST (0.3M) as a teaching baseline that shows lab overfitting.
 

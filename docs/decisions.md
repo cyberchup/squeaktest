@@ -456,6 +456,79 @@ a README.
 **Revisit:** when Opus is measured at other bitrates, or if another weak condition shows up in
 a format squeaktest accepts.
 
+## D20. Ship W2V-Large as it is, with its limits documented (Phase 2 gate)
+
+**Decision:** at the end of Phase 2, squeaktest keeps NII's W2V-Large weights unchanged, with
+the D18 bands, the D19 warning and known gaps K1-K3 published. It doesn't switch models or
+fine-tune (Dylan, 2026-10-13).
+
+**The options:**
+- **Ship with documented limits:** keep the measured model and publish where it fails.
+- **Switch models:** pick a different detector.
+- **Fine-tune:** continue training W2V-Large's weights on new labeled examples. For K2, that
+  means codec augmentation: re-encoding the training clips through Opus and other codecs, so the
+  model learns that codec damage isn't evidence of a fake.
+
+**Why:**
+- **The held-out results are good enough to ship.** On test speakers the model never saw, it
+  has 1.3% EER on clean audio, catches 98.3% of fakes at 1% false positives, and flags at most
+  0.3% of genuine clips as *Likely synthetic* under G.711, AMR-NB and MP3 (D18).
+- **Switching doesn't remove the weak spot.** Every measured model is worst on Opus (K2). The
+  one that matches W2V-Large there, W2V-Small, is significantly worse on clean, G.711 and MP3
+  audio (D17). The permissive alternatives, TCM and Wav2Vec2-AASIST, were trained only on
+  ASVspoof 2019 and report 7.8-11.2% EER on *clean* In-the-Wild (research section 2), worse than
+  W2V-Large's measured 6.1% on Opus.
+- **Fine-tuning is a project of its own, with real risks:**
+  - It needs labeled training audio from speakers outside both In-the-Wild splits. The 11 dev
+    speakers are too few, and they're already used to choose the bands.
+  - Fine-tuning a model post-trained on 74,000 hours of varied audio on one smaller dataset can
+    erode the generalization that makes it good: the lab-overfitting failure from research
+    section 1. That risk is general knowledge, not measured here.
+  - The result has to be evaluated again from scratch, the bands chosen again, and the new
+    weights inherit CC BY-NC-SA 4.0.
+  - Whether a 317M-parameter model fine-tunes within the RTX 3050's 8 GB is untested.
+- **The weak spots are visible where they matter.** Opus files carry a warning (D19), clips
+  with too little sound are *Not assessed* (D5), and the README and model card list K1-K3.
+
+**Impact:**
+- No code change. Phase 3 builds on the current model and bands.
+- Opus stays the weak spot: 8.6% of genuine Opus test clips are rated *Likely synthetic*, and
+  audio that was Opus before it was converted gets no warning (K2).
+- K1 stands: tones and music can score as confidently synthetic, so squeaktest can't be called
+  ready for SOC use until K1 is fixed.
+
+**Revisit:** with the Phase 5 robustness work (codec augmentation, then fine-tuning), if
+Deepfake-Eval-2024 access arrives and shows large drops, or if a codec-robust detector with
+usable weights is released.
+
+## D21. TCM deferred: shortlisted, not run (Phase 2 bake-off)
+
+**Decision:** TCM, the fourth model on the Phase 0 shortlist (research section 5), was not
+evaluated. The bake-off stands at three AntiDeepfake models (Dylan, 2026-10-13).
+
+**Why:**
+- **Its main job was as a licensing fallback, and the fallback wasn't needed.** TCM is
+  MIT-licensed, so it was on the list in case the AntiDeepfake weights' non-commercial license
+  was rejected. Phase 0 accepted that license (research section 6, decision 1).
+- **Its other job is answered by published numbers, roughly.** TCM was also meant to show how
+  much training-data diversity buys. Trained only on ASVspoof 2019 LA, it reports 7.79% EER on
+  In-the-Wild (Speech DF Arena), against W2V-Large's measured 1.3%. Those come from different
+  protocols, so they aren't directly comparable. But the gap is large enough that TCM would need
+  to do far better under squeaktest's protocol than reported to change the decision.
+- **It costs more than the other three did.** It needs an estimated 1.3 GB download, and its
+  weights are on OneDrive as a pickle-based `.pth` file (D13). It also needs a port of its
+  conformer back-end, which has no `transformers` equivalent, plus its own parity check against
+  the original code before its numbers count (D8).
+
+**Impact:**
+- The bake-off compares three models with the same training data and back-end, so it shows
+  what the choice of front-end does, not what training data or architecture does.
+- No permissively licensed model has been measured. If squeaktest ever needs one (for example,
+  commercial use), TCM or Wav2Vec2-AASIST has to go through the harness first.
+
+**Revisit:** if the license position changes, or for a Phase 5 ensemble. A model trained on
+different data makes different mistakes, which is what an ensemble needs.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)
@@ -500,7 +573,7 @@ warning. **Not covered:** audio that was Opus earlier and was converted before i
 squeaktest, and bitrates other than 12 kbit/s.
 
 **Status:** open. The real fix is training the model on Opus-compressed audio (codec
-augmentation), which is a decision for the Phase 2 gate.
+augmentation). The Phase 2 gate deferred that to the Phase 5 robustness work (D20).
 
 ### K3. Very short clips are less reliable (found in Phase 2)
 
