@@ -529,6 +529,61 @@ evaluated. The bake-off stands at three AntiDeepfake models (Dylan, 2026-10-13).
 **Revisit:** if the license position changes, or for a Phase 5 ensemble. A model trained on
 different data makes different mistakes, which is what an ensemble needs.
 
+## D22. Host on a Docker Space on the free CPU tier, not ZeroGPU (Phase 3)
+
+**Decision:** the public demo runs squeaktest's own Docker image on Hugging Face's free CPU
+tier (2 vCPU, 16 GB). The same image serves local `docker compose` use (Dylan, 2026-10-13).
+
+**The alternative:** a Gradio-SDK Space on ZeroGPU, Hugging Face's free shared GPU. A free
+account can host two, and each visitor gets 2 minutes of GPU time a day (5 when logged in).
+ZeroGPU only works with the Gradio SDK, where Hugging Face builds and runs the container.
+
+**Why:**
+- The demo exists to show careful handling of sensitive input. With our own image we control
+  the base image and ffmpeg version, run as a non-root user (Hugging Face runs Docker Spaces
+  as UID 1000), and make the application's files unwritable. On ZeroGPU, none of that is ours.
+- One image everywhere: what runs locally is what runs in public, so local tests of the
+  container also cover the demo.
+- ZeroGPU's published PyTorch support stops at 2.13.0; squeaktest uses 2.14.1. Moving to it
+  would mean a downgrade and a new parity check (D8).
+
+**Impact:**
+- **Speed.** On 2 threads of a desktop CPU, W2V-Large takes about 28 s per minute of audio
+  (D17). Shared cloud vCPUs are usually slower, so this is a best case; the real figure is
+  unmeasured until the image runs on a Space. A 60-second cap on the hosted demo bounds the
+  wait, and voicemails are usually shorter.
+- **One analysis at a time.** On 2 vCPUs, running two at once would only make both slower,
+  so requests queue, and a full queue is refused (see the threat model).
+- Detection quality is unchanged: the same model, windows and bands run on CPU and GPU (D12).
+
+**Revisit:** if measured latency on the Space is unacceptable. The options then are the
+W2V-Small model (D17), fewer windows per minute (D3), quantization (all three need new
+evaluation runs), or ZeroGPU. The scoring code stays a plain function so that a
+`@spaces.GPU` wrapper remains possible.
+
+## D23. A plain HTML page instead of Gradio (Phase 3)
+
+**Decision:** the web UI is one static HTML page with plain JavaScript and CSS, served by
+squeaktest's FastAPI app. Gradio, planned in Phase 0, is dropped (Dylan, 2026-10-13).
+
+**Why:**
+- Gradio's main advantage is native support on Hugging Face Spaces, and ZeroGPU requires it.
+  With a Docker Space (D22), any web page works.
+- Two Gradio defaults conflict with "no third-party analytics or trackers": telemetry is on
+  unless `GRADIO_ANALYTICS_ENABLED` turns it off, and the default theme loads fonts from Google
+  Fonts, which sends each visitor's IP address to Google. Both can be turned off, but a page
+  with no third-party code can't leak by default.
+- The page can run under a strict Content Security Policy: scripts, styles and requests from
+  squeaktest's own origin only, and no inline code. That blocks most injected-script attacks
+  outright, and a test checks the page complies.
+- Fewer dependencies. Gradio brings a large dependency tree that pip-audit would have to keep
+  clean; FastAPI and uvicorn are much smaller.
+
+**Impact:** the upload form and the timeline chart are hand-written (a few hundred lines),
+and there's no ready-made Gradio API client. Detection quality is unaffected.
+
+**Revisit:** if ZeroGPU becomes necessary (D22).
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)

@@ -182,7 +182,7 @@ Including extracted copies, plan for about 35 GB in total.
 2. **Shortlist and evaluation plan:** approved as in section 5.
 3. **New dependency:** approved. Models are ported to `transformers`; no fairseq.
 4. **Deepfake-Eval-2024:** deferred. Revisit later.
-5. **Hosting:** still open until Phase 4: CPU basic with a cap of about 60 seconds, or free ZeroGPU without the Docker hardening.
+5. **Hosting:** still open until Phase 4: CPU basic with a cap of about 60 seconds, or free ZeroGPU without the Docker hardening. *(Decided in Phase 3: a Docker Space on CPU basic, [D22](decisions.md).)*
 
 ## 7. Still to verify
 

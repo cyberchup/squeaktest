@@ -69,9 +69,9 @@ Confirmed (Phase 0 sign-off, 2026-09-30):
 Proposed (validate in Phase 1):
 - Audio decoding with `ffmpeg` in a subprocess (timeout, explicit demuxer, restricted protocols); `soundfile` optional for WAV and FLAC. Not torchaudio, whose I/O is deprecated.
 
-Planned (revisit in Phases 3-4, since free ZeroGPU hosting requires the Gradio SDK rather than Docker):
-- Backend: FastAPI. UI: Gradio for HF Spaces, which can be mounted on FastAPI.
-- Docker for local use and self-hosting
+Confirmed (Phase 3, 2026-10-13):
+- Backend: FastAPI on uvicorn. UI: one static HTML page with plain JavaScript and CSS, served by the FastAPI app; no Gradio (D23).
+- Hosting: one Docker image for local use, self-hosting and a Docker Space on HF's free CPU tier; not ZeroGPU (D22).
 
 ## Hosting and data
 
@@ -87,7 +87,7 @@ src/squeaktest/
   inference.py    # per-segment scoring + aggregation + calibration
   cli.py          # `squeaktest analyze <file>`
   api.py          # FastAPI app
-  ui.py           # Gradio interface
+  web/            # the static page (HTML, JS, CSS)
 eval/             # evaluation harness, metrics, results
 tests/
 docs/             # research notes, model card, threat model
@@ -126,7 +126,7 @@ Then stop and get Dylan's sign-off.
 - Decision gate: if out-of-domain results are poor, Dylan decides whether to ship with documented limits, switch models, or fine-tune.
 
 **Phase 3 (v0.3): Web app plus Docker.**
-FastAPI with a Gradio UI for upload, score, band, and segment timeline. Every security requirement above must be implemented and tested: rate limiting, security headers, locked-down CORS, a non-root container with a read-only filesystem. Add a `docker compose up` local run and a first `docs/threat-model.md` for the upload pipeline.
+FastAPI with a plain HTML page for upload, score, band, and segment timeline. Every security requirement above must be implemented and tested: rate limiting, security headers, locked-down CORS, a non-root container with a read-only filesystem. Add a `docker compose up` local run and a first `docs/threat-model.md` for the upload pipeline.
 
 **Phase 4 (v1.0): Publish.**
 README badges, an HF Spaces deployment, then point squeaktest.com at it.
