@@ -584,6 +584,73 @@ and there's no ready-made Gradio API client. Detection quality is unaffected.
 
 **Revisit:** if ZeroGPU becomes necessary (D22).
 
+## D24. Uploads are the raw request body, not a multipart form (Phase 3)
+
+**Decision:** `POST /api/analyze` takes the file as the request body with
+`Content-Type: application/octet-stream`. Anything else gets 415. The usual web approach, a
+`multipart/form-data` form and FastAPI's `UploadFile`, isn't used, and python-multipart isn't
+installed.
+
+**Why:**
+- **One less parser in front of untrusted input.** python-multipart, the parser behind
+  FastAPI's form handling, has had several denial-of-service flaws in exactly this code path
+  (CVE-2024-53981, CVE-2026-40347, CVE-2026-42561). A raw body needs no parsing at all.
+- **No filename ever arrives.** A multipart upload carries the file's name, which often holds
+  a person's or company's name. With a raw body there is nothing to log by accident.
+- **Uploads stay in memory.** Starlette writes file parts over 1 MB to a temporary file on
+  disk while parsing. squeaktest reads the raw body into memory instead, with a hard cap: it
+  refuses an oversized `Content-Length` before reading anything, and stops reading a body
+  without one as soon as it passes the limit. A time limit stops slow uploads from holding a
+  connection open indefinitely.
+- **Cross-site uploads need permission they won't get.** `application/octet-stream` isn't one
+  of the content types a browser sends cross-site without asking first (a CORS preflight).
+  squeaktest answers no preflight, so another website can't make a visitor's browser submit
+  files.
+
+**Impact:** a plain HTML form can't send this, so the page uses a few lines of JavaScript.
+From the command line:
+`curl --data-binary @voicemail.m4a -H "Content-Type: application/octet-stream" http://127.0.0.1:8000/api/analyze`.
+No effect on detection quality.
+
+## D25. One analysis at a time, a short queue, and per-client limits (Phase 3)
+
+**Decision:**
+- The model scores one clip at a time on a single worker thread. Up to 4 more requests wait
+  (`SQUEAKTEST_MAX_WAITING`). Beyond that, the server answers 503 straight away.
+- Each client may have one upload or analysis under way at a time (429 otherwise).
+- Each client may make 6 requests a minute, refilled evenly, one every 10 s
+  (`SQUEAKTEST_RATE_LIMIT_PER_MINUTE`; 429 with `Retry-After`).
+- At most 32 open connections (uvicorn's `limit_concurrency`).
+
+**Why:** on 2 vCPUs, two analyses at once each run at about half speed, so running them one
+at a time finishes the first sooner and the total no later. The limits are about availability
+and memory, since uploads sit in memory while they wait:
+- The queue bounds memory for queued uploads at 5 × 25 MB, and the connection cap bounds
+  uploads still arriving at 32 × 25 MB.
+- The one-at-a-time rule stops a single client from filling the queue with simultaneous
+  uploads and locking everyone else out. The rate limit only slows a client over a minute.
+- Six a minute leaves room to retry after picking the wrong file, while a client can't keep
+  the server busy by itself for long.
+
+**How a client is identified:** by the address that connected, unless
+`SQUEAKTEST_PROXY_HOPS` says how many reverse proxies are in front. Each proxy appends the
+address it saw to `X-Forwarded-For`, so with one proxy (Hugging Face's) the client is the last
+entry. Earlier entries are written by the client and ignored, so a client can't make up a new
+address for each request. If the hop count is wrong on a Space, either everyone shares one
+limit (too low: safe, but slow) or clients can choose their address (too high: limits
+bypassed). The queue and connection caps still hold either way. The right value for Hugging
+Face is unverified until the image runs there.
+
+**Privacy:** client addresses are held in memory only and never logged. A client's entry is
+dropped once its limit has fully reset (a minute after its last request), and the app checks
+for such entries every minute, so an address is held for at most about two minutes. No more
+than 10,000 are held at once; past that, the least recently seen are dropped first.
+
+**Impact:** no effect on detection quality. On a busy demo, some visitors are told to try
+again rather than waiting minutes in a long queue.
+
+**Revisit:** with real latency and traffic from the Space.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)

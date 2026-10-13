@@ -4,11 +4,11 @@
 
 > Real curds squeak. Fakes don't.
 
-**squeaktest** estimates whether speech in an audio clip is synthetic (AI-generated or voice-cloned). Instead of a yes/no verdict, it gives a score and one of three bands (*Likely synthetic*, *Uncertain*, *Likely genuine*), and shows which parts of the clip look suspicious. Its accuracy is measured on audio and generators it wasn't trained on, and all results are published, including the weak ones. Voice counts as biometric data, so audio is never kept or logged ([How your audio is handled](#how-your-audio-is-handled)). It runs locally as a command-line tool; a web app and a Docker image are planned.
+**squeaktest** estimates whether speech in an audio clip is synthetic (AI-generated or voice-cloned). Instead of a yes/no verdict, it gives a score and one of three bands (*Likely synthetic*, *Uncertain*, *Likely genuine*), and shows which parts of the clip look suspicious. Its accuracy is measured on audio and generators it wasn't trained on, and all results are published, including the weak ones. Voice counts as biometric data, so audio is never kept or logged ([How your audio is handled](#how-your-audio-is-handled)). It runs locally as a command-line tool or a small web app; a Docker image and a hosted demo are planned.
 
 ## Status
 
-Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). A web app comes next (Phase 3).
+Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app runs locally; the Docker image and a hosted demo are in progress (Phase 3).
 
 The research behind the model and dataset choices is in [docs/research.md](docs/research.md). Every design choice, with its effect on missed fakes and false positives, is in [docs/decisions.md](docs/decisions.md). What the model is for, and what it isn't, is in the [model card](docs/model-card.md).
 
@@ -32,6 +32,34 @@ model hasn't been downloaded).
 
 Speed, measured on one machine: about 1 second per minute of audio on an RTX 3050 GPU, and
 15-28 seconds on CPU ([D15](docs/decisions.md), [D17](docs/decisions.md)).
+
+### Web app
+
+```bash
+uv run squeaktest serve                   # then open http://127.0.0.1:8000
+```
+
+A single page: upload a file, get the band, score and timeline. It listens on this machine
+only unless you pass `--host`. The same analysis is available as an API, which takes the file
+as the raw request body:
+
+```bash
+curl --data-binary @voicemail.m4a -H "Content-Type: application/octet-stream" http://127.0.0.1:8000/api/analyze
+```
+
+The response is the same JSON as `analyze --json`. The server scores one clip at a time and
+limits each client to one analysis at a time and 6 requests a minute
+([D25](docs/decisions.md)). Settings, all optional:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `SQUEAKTEST_MAX_FILE_MB` | 25 | Largest accepted file |
+| `SQUEAKTEST_MAX_DURATION_S` | 300 | Longest accepted audio |
+| `SQUEAKTEST_RATE_LIMIT_PER_MINUTE` | 6 | Requests per client per minute |
+| `SQUEAKTEST_MAX_WAITING` | 4 | Requests that may wait for the model; more are told the server is busy |
+| `SQUEAKTEST_UPLOAD_TIMEOUT_S` | 60 | Longest an upload may take |
+| `SQUEAKTEST_PROXY_HOPS` | 0 | Reverse proxies in front of the app; set it only behind one you control |
+| `SQUEAKTEST_FRAME_ANCESTORS` | `'none'` | Sites allowed to show the page in a frame |
 
 ## Results
 
@@ -68,14 +96,19 @@ The model is shipped as NII published it, with these limits documented, rather t
 
 ## How your audio is handled
 
-A voice can identify a person, so squeaktest treats every recording as sensitive. This describes the command-line tool, which is all that exists today.
+A voice can identify a person, so squeaktest treats every recording as sensitive. This describes the command-line tool and the web app running on your own machine. The hosted demo will get its own notes here, since Hugging Face's servers sit between you and it.
 
 - **It stays on your machine.** Analysis runs locally, and squeaktest makes no network requests while analyzing. The only download is the model, and only when you run `fetch-model`.
 - **It isn't kept.** To decode a file, squeaktest copies it into a new temporary folder under a fixed name (never your file's name), decodes it, and deletes the folder straight away, whether decoding worked or not. The decoded audio is held in memory and is gone when the command finishes. Your original file is only read, never changed. One exception: if the computer crashes or loses power mid-decode, the copy can be left in your temp folder (or in `SQUEAKTEST_TEMP_DIR`, if you set it).
 - **It isn't logged.** squeaktest writes no log files. Results and error messages never include the file's name or any of its audio.
 - **It's checked before it's decoded.** Files are identified by their content, not their extension. Only wav, mp3, flac, ogg and m4a files with expected audio codecs are accepted. Files over 25 MB or 5 minutes are rejected; set `SQUEAKTEST_MAX_FILE_MB` and `SQUEAKTEST_MAX_DURATION_S` to change that. Decoding runs in a separate ffmpeg process with network access turned off, and is stopped after 30 seconds (`SQUEAKTEST_DECODE_TIMEOUT_S`). Audio decoders are a common home for security bugs, so keep ffmpeg up to date.
 
-The web app (Phase 3) will follow the same rules: nothing stored, no audio or file names in logs, and no third-party analytics or trackers. This section will be updated when it ships.
+The web app adds:
+
+- **Only the audio is sent.** The page sends the file's bytes, never its name. The server holds them in memory, never in a file of its own, and then handles them exactly as above.
+- **Logs are metadata only.** One line per request: the outcome, band, file size, audio length, codec and time taken. Never the audio, a file name, the score or your IP address. The web server's usual access log, which records addresses, is turned off.
+- **Your IP address is used only for rate limiting**, held in memory, and forgotten within about two minutes of your last request ([D25](docs/decisions.md)).
+- **No cookies, trackers or third-party requests.** The page loads nothing from other sites, and its Content Security Policy stops it from doing so. Results are marked never to be cached.
 
 ## Model
 
