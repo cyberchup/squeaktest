@@ -4,7 +4,7 @@
 
 > Real curds squeak. Fakes don't.
 
-**squeaktest** estimates whether speech in an audio clip is synthetic (AI-generated or voice-cloned). Instead of a yes/no verdict, it gives a score and one of three bands (*Likely synthetic*, *Uncertain*, *Likely genuine*), and shows which parts of the clip look suspicious. Its accuracy is measured on audio and generators it wasn't trained on, and all results are published, including the weak ones. Voice counts as biometric data, so uploads are processed in memory, never stored, and never logged. It runs locally through a CLI or Docker, or on the web.
+**squeaktest** estimates whether speech in an audio clip is synthetic (AI-generated or voice-cloned). Instead of a yes/no verdict, it gives a score and one of three bands (*Likely synthetic*, *Uncertain*, *Likely genuine*), and shows which parts of the clip look suspicious. Its accuracy is measured on audio and generators it wasn't trained on, and all results are published, including the weak ones. Voice counts as biometric data, so audio is never kept or logged ([How your audio is handled](#how-your-audio-is-handled)). It runs locally as a command-line tool; a web app and a Docker image are planned.
 
 ## Status
 
@@ -63,6 +63,19 @@ Measured weaknesses and untested areas. Details are in [docs/decisions.md](docs/
 - **Recent real-world deepfakes:** probably much worse than the table above (see *Read this as a best case*).
 - **Languages other than English:** untested.
 - **Untested:** partial fakes (a cloned sentence spliced into a real call), real phone networks (the codecs above are simulated), and deliberate evasion.
+
+The model is shipped as NII published it, with these limits documented, rather than fine-tuned or replaced ([D20](docs/decisions.md)).
+
+## How your audio is handled
+
+A voice can identify a person, so squeaktest treats every recording as sensitive. This describes the command-line tool, which is all that exists today.
+
+- **It stays on your machine.** Analysis runs locally, and squeaktest makes no network requests while analyzing. The only download is the model, and only when you run `fetch-model`.
+- **It isn't kept.** To decode a file, squeaktest copies it into a new temporary folder under a fixed name (never your file's name), decodes it, and deletes the folder straight away, whether decoding worked or not. The decoded audio is held in memory and is gone when the command finishes. Your original file is only read, never changed. One exception: if the computer crashes or loses power mid-decode, the copy can be left in your temp folder (or in `SQUEAKTEST_TEMP_DIR`, if you set it).
+- **It isn't logged.** squeaktest writes no log files. Results and error messages never include the file's name or any of its audio.
+- **It's checked before it's decoded.** Files are identified by their content, not their extension. Only wav, mp3, flac, ogg and m4a files with expected audio codecs are accepted. Files over 25 MB or 5 minutes are rejected; set `SQUEAKTEST_MAX_FILE_MB` and `SQUEAKTEST_MAX_DURATION_S` to change that. Decoding runs in a separate ffmpeg process with network access turned off, and is stopped after 30 seconds (`SQUEAKTEST_DECODE_TIMEOUT_S`). Audio decoders are a common home for security bugs, so keep ffmpeg up to date.
+
+The web app (Phase 3) will follow the same rules: nothing stored, no audio or file names in logs, and no third-party analytics or trackers. This section will be updated when it ships.
 
 ## Model
 
