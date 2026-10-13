@@ -16,8 +16,10 @@ jobs:
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      # libavcodec-extra adds the AMR-NB encoder the eval harness uses for the mobile-call
+      # condition; Ubuntu's standard ffmpeg build leaves it out.
       - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg libavcodec-extra
       - name: Install dependencies
         run: uv sync --locked
       - name: Lint
