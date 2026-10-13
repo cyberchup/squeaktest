@@ -1,4 +1,4 @@
-"""Command-line interface: `squeaktest analyze FILE` and `squeaktest fetch-model`.
+"""Command line: `squeaktest analyze FILE`, `squeaktest serve`, `squeaktest fetch-model`.
 
 Exit codes:
   0  analysis finished (any band, including "not assessed")
@@ -18,7 +18,7 @@ from pathlib import Path
 
 from squeaktest import __version__
 from squeaktest.audio import AudioError, FFmpegNotFoundError, load_audio_file
-from squeaktest.config import Settings
+from squeaktest.config import MB, Settings
 from squeaktest.inference import WindowingConfig, analyze
 from squeaktest.report import build_report, format_report
 
@@ -45,10 +45,21 @@ def main(argv: list[str] | None = None) -> int:
     fetch_cmd = commands.add_parser("fetch-model", help="download the detection model")
     fetch_cmd.add_argument("--yes", action="store_true", help="don't ask for confirmation")
 
+    serve_cmd = commands.add_parser("serve", help="run the web app")
+    serve_cmd.add_argument(
+        "--host", default="127.0.0.1", help="default: 127.0.0.1 (reachable from this machine only)"
+    )
+    serve_cmd.add_argument("--port", type=int, default=8000, help="default: 8000")
+    serve_cmd.add_argument(
+        "--device", choices=("auto", "cpu", "cuda"), default="auto", help="default: auto"
+    )
+
     args = parser.parse_args(argv)
     settings = Settings.from_env()
     if args.command == "analyze":
         return _analyze(args.file, settings, as_json=args.json, device=args.device)
+    if args.command == "serve":
+        return _serve(settings, host=args.host, port=args.port, device=args.device)
     return _fetch_model(settings, assume_yes=args.yes)
 
 
@@ -80,6 +91,64 @@ def _analyze(file: Path, settings: Settings, *, as_json: bool, device: str) -> i
     result = analyze(audio.samples, audio.sample_rate, detector, config)
     report = build_report(result, audio, detector.spec, config)
     print(json.dumps(report, indent=2) if as_json else format_report(report))
+    return EXIT_OK
+
+
+def _serve(settings: Settings, *, host: str, port: int, device: str) -> int:
+    import logging
+
+    import torch
+    import uvicorn
+
+    from squeaktest.api import MAX_CONNECTIONS, create_app
+    from squeaktest.config import ServerSettings
+    from squeaktest.model import ModelNotFoundError, load_detector
+
+    try:
+        server = ServerSettings.from_env()
+    except ValueError as exc:
+        return _fail(str(exc), EXIT_SETUP)
+    if device == "cuda" and not torch.cuda.is_available():
+        return _fail("--device cuda was requested, but no CUDA GPU is available", EXIT_SETUP)
+    try:
+        detector = load_detector(
+            data_dir=settings.data_dir, device=None if device == "auto" else device
+        )
+        app = create_app(detector, settings, server)
+    except ModelNotFoundError as exc:
+        return _fail(f"{exc} Run: squeaktest fetch-model", EXIT_SETUP)
+    except FFmpegNotFoundError as exc:
+        return _fail(str(exc), EXIT_SETUP)
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    logging.getLogger("squeaktest").info(
+        json.dumps(
+            {
+                "event": "start",
+                "version": __version__,
+                "model": detector.spec.name,
+                "device": str(detector.device),
+                "max_file_mb": settings.max_file_bytes / MB,
+                "max_duration_s": settings.max_duration_s,
+                "rate_limit_per_minute": server.rate_limit_per_minute,
+                "max_waiting": server.max_waiting,
+                "proxy_hops": server.proxy_hops,
+            }
+        )
+    )
+    uvicorn.run(
+        app,
+        host=host,
+        port=port,
+        # uvicorn's access log records every client's address and path; squeaktest logs its
+        # own metadata-only line per analysis instead.
+        access_log=False,
+        # Client addresses come from api.client_address, which trusts only the configured
+        # number of proxies. uvicorn's own handling would trust X-Forwarded-For from localhost.
+        proxy_headers=False,
+        server_header=False,
+        limit_concurrency=MAX_CONNECTIONS,
+    )
     return EXIT_OK
 
 

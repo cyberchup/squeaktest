@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from squeaktest.config import DEFAULT_DATA_DIR, MB, Settings
+from squeaktest.config import DEFAULT_DATA_DIR, MB, ServerSettings, Settings
 
 
 def test_defaults_match_the_brief():
@@ -62,3 +62,44 @@ def test_invalid_values_are_rejected(var: str, value: str):
 def test_direct_construction_validates():
     with pytest.raises(ValueError, match="max_duration_s"):
         Settings(max_duration_s=0)
+
+
+def test_server_defaults():
+    s = ServerSettings()
+    assert s.rate_limit_per_minute == 6
+    assert s.max_waiting == 4
+    assert s.proxy_hops == 0
+    assert s.frame_ancestors == "'none'"
+    assert ServerSettings.from_env({}) == s
+
+
+def test_server_environment_overrides():
+    s = ServerSettings.from_env(
+        {
+            "SQUEAKTEST_RATE_LIMIT_PER_MINUTE": "3",
+            "SQUEAKTEST_MAX_WAITING": "0",
+            "SQUEAKTEST_UPLOAD_TIMEOUT_S": "20",
+            "SQUEAKTEST_PROXY_HOPS": "1",
+            "SQUEAKTEST_FRAME_ANCESTORS": "https://huggingface.co",
+        }
+    )
+    assert s == ServerSettings(3, 0, 20.0, 1, "https://huggingface.co")
+
+
+@pytest.mark.parametrize(
+    ("var", "value"),
+    [
+        ("SQUEAKTEST_RATE_LIMIT_PER_MINUTE", "0"),
+        ("SQUEAKTEST_RATE_LIMIT_PER_MINUTE", "1.5"),
+        ("SQUEAKTEST_MAX_WAITING", "-1"),
+        ("SQUEAKTEST_PROXY_HOPS", "-1"),
+        ("SQUEAKTEST_UPLOAD_TIMEOUT_S", "0"),
+        # Anything that could end the CSP directive or inject another header is refused.
+        ("SQUEAKTEST_FRAME_ANCESTORS", "'self'; script-src *"),
+        ("SQUEAKTEST_FRAME_ANCESTORS", "https://a.example, https://b.example"),
+        ("SQUEAKTEST_FRAME_ANCESTORS", "   "),
+    ],
+)
+def test_invalid_server_values_are_rejected(var: str, value: str):
+    with pytest.raises(ValueError, match=r"SQUEAKTEST|frame_ancestors|must"):
+        ServerSettings.from_env({var: value})

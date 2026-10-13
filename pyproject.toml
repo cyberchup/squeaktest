@@ -8,11 +8,13 @@ license-files = ["LICENSE"]
 authors = [{ name = "Dylan Wood" }]
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.143.0",
     "huggingface-hub>=1.33.0",
     "numpy>=2.5.3",
     "safetensors>=0.8.0",
     "torch>=2.14.1",
     "transformers>=5.18.0",
+    "uvicorn>=0.54.0",
 ]
 keywords = ["deepfake", "audio", "anti-spoofing", "security", "detection-engineering"]
 classifiers = [
@@ -73,6 +75,7 @@ explicit = true
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
+    "httpx2>=2.13.1",
     "pip-audit>=2.10.1",
     "pytest>=9.1.1",
     "ruff>=0.16.9",

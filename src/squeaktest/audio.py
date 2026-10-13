@@ -175,6 +175,11 @@ def load_audio_bytes(data: bytes, settings: Settings | None = None) -> Audio:
     return Audio(samples=samples, sample_rate=TARGET_SAMPLE_RATE, container=container, codec=codec)
 
 
+def check_tools(settings: Settings) -> None:
+    """Raise FFmpegNotFoundError now, rather than on the first file (used at server start)."""
+    _find_tools(settings)
+
+
 def _find_tools(settings: Settings) -> tuple[str, str]:
     ffmpeg = shutil.which(settings.ffmpeg)
     ffprobe = shutil.which(settings.ffprobe)

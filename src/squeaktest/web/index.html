@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>squeaktest</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>squeaktest</h1>
+    <p class="tagline">Real curds squeak. Fakes don't.</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="about-heading">
+      <h2 id="about-heading" class="visually-hidden">About</h2>
+      <p>
+        Estimates whether the speech in a recording is synthetic (AI-generated or voice-cloned),
+        and shows which parts look suspicious. Built for checking a suspicious voicemail, voice
+        note or call recording.
+      </p>
+      <p class="privacy">
+        Your audio is checked, analyzed and deleted straight away. It is never stored, and
+        nothing about it is logged except its size, length, format and result band.
+      </p>
+    </section>
+
+    <section aria-labelledby="upload-heading">
+      <h2 id="upload-heading">Check a recording</h2>
+      <form id="upload-form" novalidate>
+        <label id="drop-zone" for="file-input">
+          <span id="drop-text">Choose an audio file, or drop it here</span>
+          <input id="file-input" type="file"
+                 accept=".wav,.mp3,.flac,.ogg,.opus,.oga,.m4a,audio/*">
+        </label>
+        <p id="limits" class="hint">wav, mp3, flac, ogg or m4a.</p>
+        <button id="analyze-button" type="submit" disabled>Analyze</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="result" aria-labelledby="result-heading" hidden>
+      <h2 id="result-heading">Result</h2>
+      <p id="band" class="band"></p>
+      <p id="score-line"></p>
+      <p id="audio-line" class="hint"></p>
+      <div id="warnings"></div>
+
+      <h3>Timeline</h3>
+      <p class="hint">
+        Each bar is one stretch of the clip. Taller bars look more synthetic. The dashed lines
+        are the band thresholds.
+      </p>
+      <div id="timeline"></div>
+      <details>
+        <summary>Window scores as a table</summary>
+        <table id="window-table">
+          <thead><tr><th scope="col">From (s)</th><th scope="col">To (s)</th><th scope="col">Score</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </details>
+
+      <p id="disclaimer" class="disclaimer"></p>
+      <p id="score-note" class="hint"></p>
+    </section>
+
+    <section aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Know its limits</h2>
+      <ul>
+        <li>The score is the model's raw output, not a probability. Act on the band, and verify
+          through another channel (call back on a known number).</li>
+        <li>Opus voice notes and VoIP audio cause more false alarms than other audio.</li>
+        <li>Tones, beeps and music can score as synthetic.</li>
+        <li>Tested on English speech only, and on deepfakes from 2022 and earlier. Newer
+          deepfakes are probably harder to catch.</li>
+      </ul>
+      <p>
+        Measured results and every known gap are in the
+        <a href="https://github.com/cyberchup/squeaktest#results" rel="noopener noreferrer">README</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p id="model-line"></p>
+    <p>
+      <a href="https://github.com/cyberchup/squeaktest" rel="noopener noreferrer">Source code</a>
+      (MIT). The model weights are licensed for non-commercial use only.
+    </p>
+  </footer>
+</body>
+</html>
