@@ -1,6 +1,6 @@
 [project]
 name = "squeaktest"
-version = "0.1.0.dev0"
+version = "0.2.0"
 description = "Deepfake voice detector with calibrated, probabilistic output, built for SOC triage."
 readme = "README.md"
 license = "MIT"
