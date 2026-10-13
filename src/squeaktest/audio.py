@@ -4,10 +4,17 @@ Every input is treated as hostile. The pipeline is:
 
 1. Size check, before reading the whole file.
 2. Sniff the container from its magic bytes. The file extension is ignored.
-3. Probe with ffprobe, forcing the sniffed demuxer, and check the codec against an allowlist.
+3. Probe with ffprobe, forcing the sniffed demuxer, and check every stream's codec against an
+   allowlist.
 4. Decode with ffmpeg in a subprocess with a timeout, to 16 kHz mono float32. A separate
    process keeps a decoder crash or exploit out of this process, and can be killed.
 5. Check the decoded length (headers can lie) and that there is audio at all.
+
+In steps 3 and 4, ffmpeg itself is told which decoders it may open (`-codec_whitelist`): only
+the ones for the allowed codecs of the sniffed container. ffprobe opens a decoder for every
+stream in the file while probing, so without this, a file could reach any of ffmpeg's decoders
+(an image in cover art, an obscure codec in a second stream) before squeaktest's own allowlist
+check ran (docs/decisions.md D26).
 
 The bytes only ever exist in a private temporary directory that is deleted whether decoding
 succeeds or fails. Error messages never contain filenames or file content, so they are safe
@@ -19,6 +26,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import shutil
 import subprocess  # nosec B404
 import tempfile
@@ -55,6 +63,28 @@ _CONTAINERS: dict[str, tuple[str, frozenset[str]]] = {
     "mp3": ("mp3", frozenset({"mp3"})),
     "m4a": ("mov", frozenset({"aac", "alac"})),
 }
+
+# Allowed codec -> the ffmpeg decoders that may handle it. ffmpeg's whitelist names decoders,
+# not codecs: MP3, for one, is decoded by "mp3float". Only ffmpeg's own (native) decoders.
+_DECODERS: dict[str, tuple[str, ...]] = {
+    "mp3": ("mp3float", "mp3"),
+    "aac": ("aac", "aac_fixed"),
+    "alac": ("alac",),
+    "flac": ("flac",),
+    "vorbis": ("vorbis",),
+    "opus": ("opus",),
+    **{pcm: (pcm,) for pcm in _CONTAINERS["wav"][1]},
+}
+
+# ffmpeg's message when the whitelist stops it opening a decoder.
+_REFUSED_DECODER = re.compile(rb"Codec \(([A-Za-z0-9_]+)\) not on whitelist")
+
+
+def decoder_whitelist(container: str) -> str:
+    """The `-codec_whitelist` value for a sniffed container: its allowed codecs' decoders."""
+    codecs = _CONTAINERS[container][1]
+    return ",".join(sorted({d for codec in codecs for d in _DECODERS[codec]}))
+
 
 # ISO base media "ftyp" brands seen on M4A files. Generic brands (isom, mp42) are also used by
 # MP4 video, which the probe step rejects.
@@ -171,7 +201,7 @@ def load_audio_bytes(data: bytes, settings: Settings | None = None) -> Audio:
         source = Path(tmp) / "input"
         source.write_bytes(data)
         codec = _probe(ffprobe, source, container, demuxer, allowed_codecs, settings)
-        samples = _decode(ffmpeg, source, demuxer, settings)
+        samples = _decode(ffmpeg, source, container, demuxer, settings)
     return Audio(samples=samples, sample_rate=TARGET_SAMPLE_RATE, container=container, codec=codec)
 
 
@@ -199,20 +229,27 @@ def _probe(
     allowed_codecs: frozenset[str],
     settings: Settings,
 ) -> str:
-    """Check the streams and codec, and reject early if the header says it's too long."""
+    """Check every stream's codec, and reject early if the header says it's too long."""
     command = [
         ffprobe,
         "-v", "error",
         "-protocol_whitelist", "file",
+        "-codec_whitelist", decoder_whitelist(container),
         "-f", demuxer,
-        "-show_entries", "stream=codec_type,codec_name:stream_disposition=attached_pic"
-        ":format=duration",
+        "-show_entries", "stream=codec_type,codec_name:format=duration",
         "-of", "json",
         str(source),
     ]  # fmt: skip
     result = _run(command, settings, step="probe")
     unparsable = f"file looks like {container} but could not be parsed"
     if result.returncode != 0:
+        refused = _REFUSED_DECODER.search(result.stderr)
+        if refused:
+            # A stream needs a decoder that isn't allowed: an unsupported codec, cover art,
+            # video, or an extra stream. ffmpeg refused to open it.
+            raise UnsupportedFormatError(
+                _codec_message(container, refused.group(1).decode("ascii"), allowed_codecs)
+            )
         raise UnsupportedFormatError(unparsable)
     try:
         info = json.loads(result.stdout)
@@ -220,22 +257,15 @@ def _probe(
         raise UnsupportedFormatError(unparsable) from None
 
     streams = info.get("streams", [])
-    audio = [s for s in streams if s.get("codec_type") == "audio"]
-    # Cover art in MP3 and M4A shows up as a video stream marked attached_pic; that's fine.
-    video = [
-        s
-        for s in streams
-        if s.get("codec_type") == "video" and not s.get("disposition", {}).get("attached_pic")
-    ]
-    if not audio:
+    if not any(s.get("codec_type") == "audio" for s in streams):
         raise UnsupportedFormatError("no audio stream found")
-    if video:
-        raise UnsupportedFormatError("video files are not supported")
-    codec = str(audio[0].get("codec_name", ""))
-    if codec not in allowed_codecs:
-        raise UnsupportedFormatError(
-            f"{container} with the {codec or 'unknown'} codec is not supported"
-        )
+    # The whitelist already refused other decoders; this also catches streams ffmpeg has no
+    # decoder for at all, which it reports without opening anything.
+    for stream in streams:
+        codec = str(stream.get("codec_name", ""))
+        if stream.get("codec_type") != "audio" or codec not in allowed_codecs:
+            raise UnsupportedFormatError(_codec_message(container, codec, allowed_codecs))
+    codec = str(streams[0].get("codec_name"))
 
     duration = _parse_seconds(info.get("format", {}).get("duration"))
     if duration is not None and duration > settings.max_duration_s:
@@ -243,7 +273,9 @@ def _probe(
     return codec
 
 
-def _decode(ffmpeg: str, source: Path, demuxer: str, settings: Settings) -> np.ndarray:
+def _decode(
+    ffmpeg: str, source: Path, container: str, demuxer: str, settings: Settings
+) -> np.ndarray:
     """Decode the first audio stream to mono float32 at TARGET_SAMPLE_RATE."""
     # -t caps the output just past the limit. A file whose header understates its length
     # still can't make us decode, or hold in memory, more than that.
@@ -253,6 +285,7 @@ def _decode(ffmpeg: str, source: Path, demuxer: str, settings: Settings) -> np.n
         "-nostdin", "-hide_banner", "-loglevel", "error",
         "-threads", "1",
         "-protocol_whitelist", "file",
+        "-codec_whitelist", decoder_whitelist(container),  # applies to this input's decoders
         "-f", demuxer,
         "-i", str(source),
         "-map", "0:a:0", "-vn", "-sn", "-dn",
@@ -300,6 +333,13 @@ def _parse_seconds(value: object) -> float | None:
     except ValueError:  # ffprobe reports "N/A" when it doesn't know
         return None
     return seconds if math.isfinite(seconds) else None
+
+
+def _codec_message(container: str, codec: str, allowed: frozenset[str]) -> str:
+    return (
+        f"{container} with the {codec or 'unknown'} codec is not supported (only "
+        f"{', '.join(sorted(allowed))} audio, with no embedded images or extra streams)"
+    )
 
 
 def _too_large_message(settings: Settings) -> str:

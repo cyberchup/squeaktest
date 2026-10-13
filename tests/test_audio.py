@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from conftest import TONE_HZ, TONE_SECONDS
 
+import squeaktest.audio
 from squeaktest.audio import (
     TARGET_SAMPLE_RATE,
     AudioError,
@@ -17,6 +18,7 @@ from squeaktest.audio import (
     FFmpegNotFoundError,
     FileTooLargeError,
     UnsupportedFormatError,
+    decoder_whitelist,
     load_audio_bytes,
     load_audio_file,
     sniff_container,
@@ -147,12 +149,49 @@ def test_extension_is_ignored(audio_fixtures: dict[str, Path], tmp_path: Path):
     [
         ("adts_aac", "not a supported audio file"),
         ("wav_adpcm", "adpcm_ms codec is not supported"),
-        ("mp4_video", "video files are not supported"),
+        # These need a decoder outside the container's allowlist, so ffmpeg itself refuses to
+        # open it (codec_whitelist); the message names the decoder it refused.
+        ("mp4_video", "mpeg4 codec is not supported"),
+        ("mp3_cover", "mjpeg codec is not supported"),
+        ("m4a_cover", "png codec is not supported"),
+        ("m4a_two_streams", "mp3(float)? codec is not supported"),
     ],
 )
 def test_disallowed_formats_are_rejected(audio_fixtures: dict[str, Path], name: str, match: str):
     with pytest.raises(UnsupportedFormatError, match=match):
         load_audio_file(audio_fixtures[name], Settings())
+
+
+def test_rejections_say_what_is_allowed(audio_fixtures: dict[str, Path]):
+    with pytest.raises(UnsupportedFormatError, match="only aac, alac audio, with no embedded"):
+        load_audio_file(audio_fixtures["m4a_cover"], Settings())
+
+
+@pytest.mark.parametrize("container", ["wav", "flac", "ogg", "mp3", "m4a"])
+def test_every_allowed_codec_has_decoders(container: str):
+    decoders = set(decoder_whitelist(container).split(","))
+    assert decoders
+    assert not decoders & {"mjpeg", "png", "mpeg4", "h264", "libopus", "libvorbis"}
+
+
+@pytest.mark.parametrize(("name", "container"), [("mp3", "mp3"), ("m4a_aac", "m4a")])
+def test_ffmpeg_is_told_which_decoders_it_may_open(
+    audio_fixtures: dict[str, Path], monkeypatch: pytest.MonkeyPatch, name: str, container: str
+):
+    commands: list[list[str]] = []
+    real_run = squeaktest.audio._run
+
+    def recording_run(command, settings, step):
+        commands.append(command)
+        return real_run(command, settings, step)
+
+    monkeypatch.setattr(squeaktest.audio, "_run", recording_run)
+    load_audio_file(audio_fixtures[name], Settings())
+    assert len(commands) == 2  # probe, then decode
+    for command in commands:
+        i = command.index("-codec_whitelist")
+        assert command[i + 1] == decoder_whitelist(container)
+        assert i < command.index("-f")  # an input option, before the input
 
 
 @pytest.mark.usefixtures("audio_fixtures")

@@ -39,7 +39,26 @@ _GENERATED: dict[str, tuple[list[str], list[str], str]] = {
         ["-map", "0:a", "-map", "1:v", "-c:a", "aac", "-c:v", "mpeg4"],
         "video.mp4",
     ),
-}
+    # Allowed audio plus a stream that needs another decoder: cover art (an image) or a
+    # second audio stream in a codec the container doesn't allow.
+    "mp3_cover": (
+        ["-f", "lavfi", "-i", "color=c=red:s=64x64:d=1"],
+        ["-map", "0:a", "-map", "1:v", "-frames:v", "1", "-c:a", "libmp3lame", "-c:v", "mjpeg",
+         "-disposition:v", "attached_pic", "-id3v2_version", "3"],
+        "cover.mp3",
+    ),
+    "m4a_cover": (
+        ["-f", "lavfi", "-i", "color=c=red:s=64x64:d=1"],
+        ["-map", "0:a", "-map", "1:v", "-frames:v", "1", "-c:a", "aac", "-c:v", "png",
+         "-disposition:v", "attached_pic"],
+        "cover.m4a",
+    ),
+    "m4a_two_streams": (
+        ["-f", "lavfi", "-i", "sine=frequency=220:sample_rate=44100:duration=2"],
+        ["-map", "0:a", "-map", "1:a", "-c:a:0", "aac", "-c:a:1", "libmp3lame", "-f", "mp4"],
+        "two-streams.m4a",
+    ),
+}  # fmt: skip
 
 
 @pytest.fixture(scope="session")
