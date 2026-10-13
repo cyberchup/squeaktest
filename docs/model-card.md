@@ -15,7 +15,7 @@ was measured by squeaktest unless it says *reported by NII*. The format follows
 | License | CC BY-NC-SA 4.0: non-commercial use only. Fine-tuned versions would inherit it |
 | Architecture | wav2vec 2.0 Large (24 layers, 1024 wide, 317M parameters), mean pooling over time, then `Linear(1024, 2)` |
 | Runtime | Hugging Face `transformers`, not NII's fairseq code. Outputs match NII's code within 7e-6 (logits) on five test signals ([D8](decisions.md)) |
-| Input | Any wav, mp3, flac, ogg or m4a file, decoded by ffmpeg to 16 kHz mono |
+| Input | A wav, mp3, flac, ogg or m4a file with allowed audio streams only (no cover art or extra streams), decoded by ffmpeg to 16 kHz mono |
 | Output | A band (*Likely synthetic*, *Uncertain*, *Likely genuine* or *Not assessed*), a raw score from 0 to 1, and a score for each 4-second window |
 | Chosen | Phase 2 bake-off, 2026-10-07 ([D17](decisions.md)), over AntiDeepfake MMS-300M and Wav2Vec2-Small. TCM, also shortlisted, wasn't run ([D21](decisions.md)). Shipped unchanged with its limits documented ([D20](decisions.md)) |
 

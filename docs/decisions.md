@@ -651,6 +651,72 @@ again rather than waiting minutes in a long queue.
 
 **Revisit:** with real latency and traffic from the Space.
 
+## D26. The container: pinned images, Debian's ffmpeg behind a decoder whitelist, a locked-down runtime (Phase 3)
+
+**Decision:**
+- Base images are pinned by digest: Python 3.12 on Debian 13 (trixie), and uv. Python packages
+  are installed exactly as `uv.lock` pins them (CPU-only PyTorch).
+- ffmpeg comes from Debian's packages (7.1.5 at the first build). For every file, ffmpeg is
+  told which decoders it may open (`-codec_whitelist`): only those for the allowed codecs of
+  the sniffed container. Files with embedded images (cover art) or extra streams are rejected
+  (Dylan, 2026-10-13).
+- The model is either built in (`WEIGHTS=included`, for the Space), with its SHA-256 checked at
+  build time and again at every load, or mounted read-only (`WEIGHTS=mounted`, for local
+  `docker compose`).
+- At runtime the app runs as UID 1000. Its code and model belong to root, so it can't change
+  them, and only `/tmp` is writable. Hugging Face's libraries are set to offline mode.
+  `compose.yaml` adds a read-only root filesystem, `/tmp` in memory, no Linux capabilities, no
+  privilege escalation, and CPU, memory and process limits.
+
+**The ffmpeg options:**
+
+| Option | Decoders an upload can reach | Who patches ffmpeg |
+|---|---|---|
+| Debian's package with a decoder whitelist (chosen) | Only the allowed ones; ffmpeg refuses the rest | Debian's security team; a rebuild picks up fixes |
+| A custom minimal build | Only the ones compiled in | squeaktest: watch ffmpeg's advisories, rebuild |
+| A third-party static build | All of them | The third party, another supplier to trust |
+
+**Why:**
+- Decoders are the main attack surface of an upload service, and a bug in a decoder that never
+  runs can't be exploited. Before this decision, ffprobe opened a decoder for every stream in
+  a file while probing, before squeaktest's allowlist check, and the check only looked at the
+  first audio stream. Cover art reached the JPEG and PNG decoders, and a second stream could
+  reach any decoder ffmpeg has (verified with test files). Now ffmpeg itself refuses them, and
+  tests prove it with cover-art and two-stream files.
+- With the whitelist, Debian's full build exposes about the same decoders as a minimal build
+  would, and patching stays with a team whose job it is. What's left in common with a minimal
+  build is the container parsers (demuxers) for the five formats, which run on every upload
+  either way. What's left over is the whitelist itself: a bug in how ffmpeg enforces it would
+  expose the other decoders.
+- Cover art is rejected rather than allowed through `mjpeg` and `png`, because image decoders
+  have a long history of security bugs, and voicemails, voice notes and call recordings rarely
+  carry cover art.
+
+**What only `compose.yaml` enforces:** on a Hugging Face Space, Hugging Face runs the container,
+so the read-only root filesystem, dropped capabilities, no-new-privileges and resource limits
+don't apply there. The Space keeps what's built into the image: the non-root user, root-owned
+code and model, offline libraries, and pinned contents.
+
+**Impact:**
+- MP3 and M4A files with cover art are rejected, with a message that says what's allowed.
+  Detection quality is unaffected.
+- The image gets Debian's security fixes, and new base images, only when it's rebuilt and the
+  digests are bumped. Neither is automated yet.
+- `WEIGHTS=included` adds about 1.3 GB to the image; the container itself never needs the
+  network.
+- **Untested:** `docker compose up` itself (no local container engine was available) and a
+  `WEIGHTS=included` build. CI builds the image without the model and checks its hardening on
+  every push (`scripts/check_image.sh`).
+
+**Residual risk (for the threat model):** a code-execution bug in an allowed decoder or demuxer
+would still run as UID 1000 inside the container, the same user as the app. From there it may
+be able to read uploads waiting in the queue and reach the network. Decoding in a separate
+sandbox (its own user or container, a seccomp profile) is a Phase 5 candidate.
+
+**Revisit:** set up a scheduled rebuild with digest updates; act at once when an ffmpeg advisory
+affects an allowed decoder or demuxer; and revisit if Hugging Face lets Spaces set runtime
+restrictions.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)
