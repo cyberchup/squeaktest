@@ -11,6 +11,7 @@ import importlib.metadata
 import json
 import logging
 import re
+import subprocess
 import threading
 from collections.abc import Iterator, Sequence
 from importlib import resources
@@ -21,6 +22,7 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.datastructures import Headers
 
+import squeaktest.audio
 import squeaktest.model
 from squeaktest.api import (
     MAX_CONNECTIONS,
@@ -459,6 +461,34 @@ def test_logs_hold_metadata_only(make_client, audio_fixtures, caplog):
     assert "testclient" not in text  # the client's address
     assert str(score) not in text
     assert "tone.flac" not in text
+
+
+def test_a_decoder_crash_is_logged_apart_but_answered_like_a_bad_file(
+    make_client, audio_fixtures, caplog, monkeypatch: pytest.MonkeyPatch
+):
+    real_run = squeaktest.audio._run
+
+    def segfaulting_decode(command, settings, step):
+        if step == "decode":
+            return subprocess.CompletedProcess(command, -11, b"", b"")  # SIGSEGV
+        return real_run(command, settings, step)
+
+    monkeypatch.setattr(squeaktest.audio, "_run", segfaulting_decode)
+    caplog.set_level(logging.INFO, logger="squeaktest.api")
+    response = post_file(make_client(), audio_fixtures["flac"])
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": "rejected",
+        "message": "Input rejected: the audio stream could not be decoded.",
+    }
+    (record,) = [r for r in caplog.records if r.name == "squeaktest.api"]
+    assert record.levelno == logging.WARNING
+    fields = json.loads(record.getMessage())
+    assert fields["outcome"] == "decoder_crashed"
+    assert fields["step"] == "decode"
+    assert fields["returncode"] == -11
+    assert set(fields) == {"event", "outcome", "size", "step", "returncode", "elapsed_s"}
 
 
 def test_no_telemetry_sdk_is_installed():

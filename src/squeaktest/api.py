@@ -47,6 +47,7 @@ from squeaktest import __version__
 from squeaktest.audio import (
     ALLOWED_FORMATS,
     AudioError,
+    DecoderCrashedError,
     FileTooLargeError,
     check_tools,
     load_audio_bytes,
@@ -177,6 +178,19 @@ def create_app(
         except FileTooLargeError:
             _log_outcome("too_large", started, size=len(data))
             return _error(413, "too_large", _too_large(settings))
+        except DecoderCrashedError as exc:
+            # ffmpeg was killed rather than refusing the file: what an exploit attempt looks
+            # like, so it gets its own outcome at WARNING. The uploader gets the same answer as
+            # for any file that can't be read (docs/decisions.md D29).
+            _log_outcome(
+                "decoder_crashed",
+                started,
+                level=logging.WARNING,
+                size=len(data),
+                step=exc.step,
+                returncode=exc.returncode,
+            )
+            return _error(400, "rejected", f"Input rejected: {exc}.")
         except AudioError as exc:
             # AudioError messages never contain file names or content (see audio.py).
             _log_outcome("rejected", started, size=len(data), reason=type(exc).__name__)
@@ -481,11 +495,11 @@ def _too_large(settings: Settings) -> str:
     return f"The file is larger than the {settings.max_file_bytes / MB:g} MB limit."
 
 
-def _log_outcome(outcome: str, started: float, **fields: object) -> None:
+def _log_outcome(outcome: str, started: float, level: int = logging.INFO, **fields: object) -> None:
     # Metadata only. Never the audio, the client's address or the score.
     record = {"event": "analysis", "outcome": outcome, **fields}
     record["elapsed_s"] = round(time.monotonic() - started, 2)
-    log.info(json.dumps(record))
+    log.log(level, json.dumps(record))
 
 
 def _load_assets() -> dict[str, tuple[bytes, str]]:

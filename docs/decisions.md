@@ -799,6 +799,36 @@ proxy passes the original `Host` through (Caddy and Traefik do by default; nginx
 
 **Revisit:** if squeaktest moves behind a proxy that rewrites `Host`, or gets a public name.
 
+## D29. Log decoder crashes apart from rejections, without telling the uploader (Phase 3)
+
+**Decision:** when ffprobe or ffmpeg is killed instead of exiting (a negative return code on
+Linux, such as -11 for SIGSEGV; an NTSTATUS code such as `0xC0000005` on Windows), squeaktest
+raises `DecoderCrashedError`. The web app logs it as `"outcome": "decoder_crashed"` at WARNING,
+with the step (`probe` or `decode`) and the return code. The uploader gets exactly the 400 and
+message any unreadable file gets. Found by a security check on 2026-10-19; Dylan asked for the
+fix the same day.
+
+**Why:**
+- Before this, a crash was logged as `"outcome": "rejected"` with the same reason as a text
+  file renamed `.mp3`. Exploit attempts and fuzzing against the decoder (T1, the most valuable
+  attack on squeaktest) were invisible among ordinary mistakes.
+- A crash is rare for honest files, so it's a high-fidelity signal: one is worth a look, and a
+  run of them from the same time window is worth an alert. WARNING also makes it stand out in
+  `docker logs` without a SIEM.
+- **The uploader isn't told.** A different message would tell an attacker which of their files
+  crashed the decoder, which is the feedback a fuzzer needs. They can still time responses or
+  fuzz their own copy of ffmpeg, so this denies little, but it costs nothing.
+- The out-of-memory killer's SIGKILL counts as a crash too. A file that makes the decoder run
+  out of memory is just as worth knowing about.
+
+**Impact:** no effect on detection quality or on what users see. Log consumers get one more
+outcome value. A working exploit doesn't crash anything, so this catches attempts, not
+success; container egress blocking and a decode sandbox (threat model T1) remain the controls
+for that.
+
+**Revisit:** with the SIEM event (Phase 5), which should carry this outcome; or if decoding
+moves to a separate sandbox, which would report crashes its own way.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)

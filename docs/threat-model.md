@@ -154,6 +154,14 @@ author only needs someone to upload the file.
   can't change them. Checked on every push by `scripts/check_image.sh`.
 - ffmpeg comes from Debian's packages, which Debian's security team patches (7.1.5 at the
   first build).
+- **Detection.** If ffprobe or ffmpeg is killed instead of exiting (a signal such as SIGSEGV or
+  SIGABRT), the log line says `"outcome": "decoder_crashed"`, at WARNING, with the step and the
+  return code (D29). Failed exploit attempts and fuzzing tend to crash the decoder, so a run of
+  these is worth an alert. The uploader gets the same answer as for any unreadable file, so
+  it's no help in tuning an exploit. Tested:
+  `tests/test_audio.py::test_a_crashed_decoder_is_told_apart_from_a_bad_file`,
+  `tests/test_api.py::test_a_decoder_crash_is_logged_apart_but_answered_like_a_bad_file`. An
+  exploit that works doesn't crash anything, so this catches the attempts, not the success.
 
 **What's left:**
 - **Same user as the app.** The exploited process runs as UID 1000, like the server. It can
@@ -258,8 +266,9 @@ running server.
 ### T6. Leaks through logs, errors or caches
 
 **Controls:**
-- One log line per request: outcome, band, file size, audio length, codec and time taken. Never
-  the audio, a file name, the score or the client's address. Tested:
+- One log line per request: outcome, band, file size, audio length, codec and time taken (and
+  for a decoder crash, the step and return code). Never the audio, a file name, the score or
+  the client's address. Tested:
   `tests/test_api.py::test_logs_hold_metadata_only`.
 - uvicorn's access log, which records addresses, is off, and so is its `Server` header. Tested:
   `::test_serve_runs_uvicorn_with_safe_options`.
@@ -430,6 +439,8 @@ In order of value for effort:
   restrictions: 2.84 GB peak memory, about 21 s per 60-second clip (D27).
 - **Unverified:**
   - `docker compose up` itself.
+  - That a real decoder crash reaches the log as `decoder_crashed` inside the container. The
+    tests simulate the crash's return code rather than crashing ffmpeg.
   - The LAN listen address, which doesn't exist yet.
   - What exploit code could reach as UID 1000 (T1).
   - How uvicorn handles slow headers (T11).

@@ -7,7 +7,8 @@ Every input is treated as hostile. The pipeline is:
 3. Probe with ffprobe, forcing the sniffed demuxer, and check every stream's codec against an
    allowlist.
 4. Decode with ffmpeg in a subprocess with a timeout, to 16 kHz mono float32. A separate
-   process keeps a decoder crash or exploit out of this process, and can be killed.
+   process keeps a decoder crash or exploit out of this process, and can be killed. A crash
+   in step 3 or 4 raises DecoderCrashedError, so callers can log it apart.
 5. Check the decoded length (headers can lie) and that there is audio at all.
 
 In steps 3 and 4, ffmpeg itself is told which decoders it may open (`-codec_whitelist`): only
@@ -115,6 +116,20 @@ class DecodeError(AudioError):
 
 class DecodeTimeoutError(DecodeError):
     pass
+
+
+class DecoderCrashedError(DecodeError):
+    """ffprobe or ffmpeg was killed instead of exiting, so it crashed rather than refusing the file.
+
+    A crafted file trying to exploit a decoder looks like this, so the web app logs it apart
+    from ordinary rejections. The message is the one any file that can't be read gets: the
+    uploader learns nothing from it that would help tune an exploit.
+    """
+
+    def __init__(self, message: str, step: str, returncode: int) -> None:
+        super().__init__(message)
+        self.step = step
+        self.returncode = returncode
 
 
 class EmptyAudioError(AudioError):
@@ -242,6 +257,7 @@ def _probe(
     ]  # fmt: skip
     result = _run(command, settings, step="probe")
     unparsable = f"file looks like {container} but could not be parsed"
+    _check_not_crashed(result, "probe", unparsable)
     if result.returncode != 0:
         refused = _REFUSED_DECODER.search(result.stderr)
         if refused:
@@ -297,8 +313,10 @@ def _decode(
         "pipe:1",
     ]  # fmt: skip
     result = _run(command, settings, step="decode")
+    undecodable = "the audio stream could not be decoded"
+    _check_not_crashed(result, "decode", undecodable)
     if result.returncode != 0:
-        raise DecodeError("the audio stream could not be decoded")
+        raise DecodeError(undecodable)
 
     raw = result.stdout[: len(result.stdout) - len(result.stdout) % 4]
     samples = np.frombuffer(raw, dtype="<f4").astype(np.float32)
@@ -323,6 +341,16 @@ def _run(command: list[str], settings: Settings, step: str) -> subprocess.Comple
         raise DecodeTimeoutError(
             f"audio {step} took longer than the {settings.decode_timeout_s:g} s limit"
         ) from None
+
+
+def _check_not_crashed(result: subprocess.CompletedProcess[bytes], step: str, message: str) -> None:
+    # Linux reports a process killed by a signal as minus the signal number: -11 for SIGSEGV,
+    # -6 for SIGABRT, -9 for SIGKILL (also what the out-of-memory killer sends). Windows
+    # reports an unhandled exception as its NTSTATUS code, such as 0xC0000005 for an access
+    # violation. ffmpeg's own errors exit with small positive codes.
+    code = result.returncode
+    if code < 0 or code >= 0xC0000000:
+        raise DecoderCrashedError(message, step=step, returncode=code)
 
 
 def _parse_seconds(value: object) -> float | None:

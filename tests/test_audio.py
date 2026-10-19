@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import struct
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,7 @@ import squeaktest.audio
 from squeaktest.audio import (
     TARGET_SAMPLE_RATE,
     AudioError,
+    DecoderCrashedError,
     DecodeTimeoutError,
     DurationTooLongError,
     EmptyAudioError,
@@ -231,6 +233,45 @@ def test_empty_audio_is_rejected(audio_fixtures: dict[str, Path]):
 def test_decoder_timeout(audio_fixtures: dict[str, Path]):
     with pytest.raises(DecodeTimeoutError):
         load_audio_file(audio_fixtures["flac"], Settings(decode_timeout_s=0.001))
+
+
+@pytest.mark.parametrize("failing_step", ["probe", "decode"])
+@pytest.mark.parametrize(
+    ("returncode", "crashed"),
+    [
+        (-11, True),  # SIGSEGV on Linux
+        (-6, True),  # SIGABRT
+        (0xC0000005, True),  # an access violation on Windows
+        (1, False),  # ffmpeg's ordinary error exit
+    ],
+)
+def test_a_crashed_decoder_is_told_apart_from_a_bad_file(
+    audio_fixtures: dict[str, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    failing_step: str,
+    returncode: int,
+    crashed: bool,
+):
+    real_run = squeaktest.audio._run
+
+    def failing_run(command, settings, step):
+        if step == failing_step:
+            return subprocess.CompletedProcess(command, returncode, b"", b"")
+        return real_run(command, settings, step)
+
+    monkeypatch.setattr(squeaktest.audio, "_run", failing_run)
+    with pytest.raises(AudioError) as excinfo:
+        load_audio_file(audio_fixtures["flac"], Settings())
+    assert isinstance(excinfo.value, DecoderCrashedError) is crashed
+    if crashed:
+        assert excinfo.value.step == failing_step
+        assert excinfo.value.returncode == returncode
+    # Crash or not, the message is the same, so an uploader can't tell a crash from a bad file.
+    ordinary = {
+        "probe": "file looks like flac but could not be parsed",
+        "decode": "the audio stream could not be decoded",
+    }
+    assert str(excinfo.value) == ordinary[failing_step]
 
 
 # --- No persistence, no leaks ------------------------------------------------------------
