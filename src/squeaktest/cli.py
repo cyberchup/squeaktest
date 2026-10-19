@@ -133,6 +133,7 @@ def _serve(settings: Settings, *, host: str, port: int, device: str) -> int:
                 "rate_limit_per_minute": server.rate_limit_per_minute,
                 "max_waiting": server.max_waiting,
                 "proxy_hops": server.proxy_hops,
+                "allowed_hosts": list(server.allowed_hosts),
             }
         )
     )

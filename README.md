@@ -42,8 +42,10 @@ uv run squeaktest serve                   # then open http://127.0.0.1:8000
 ```
 
 A single page: upload a file, get the band, score and timeline. It listens on this machine
-only unless you pass `--host`. The same analysis is available as an API, which takes the file
-as the raw request body:
+only unless you pass `--host`. If you do, list the name or address people will use in
+`SQUEAKTEST_ALLOWED_HOSTS`. The server answers only to `localhost` and the names listed there,
+so a website can't use DNS rebinding to reach it through your browser. The same analysis is
+available as an API, which takes the file as the raw request body:
 
 ```bash
 curl --data-binary @voicemail.m4a -H "Content-Type: application/octet-stream" http://127.0.0.1:8000/api/analyze
@@ -62,6 +64,7 @@ limits each client to one analysis at a time and 6 requests a minute
 | `SQUEAKTEST_UPLOAD_TIMEOUT_S` | 60 | Longest an upload may take |
 | `SQUEAKTEST_PROXY_HOPS` | 0 | Reverse proxies in front of the app; set it only behind one you control |
 | `SQUEAKTEST_FRAME_ANCESTORS` | `'none'` | Sites allowed to show the page in a frame |
+| `SQUEAKTEST_ALLOWED_HOSTS` | none | Host names or addresses the server answers to besides `localhost`, comma-separated (for example `squeaktest.lan,192.168.1.50`) |
 
 ### Docker
 

@@ -60,7 +60,8 @@ def make_client(audio_fixtures: dict[str, Path]) -> Iterator:
 
     def make(settings: Settings | None = None, **server: object) -> TestClient:
         app = create_app(FakeDetector(), settings or Settings(), ServerSettings(**server))
-        client = TestClient(app).__enter__()
+        # TestClient's default host name, "testserver", isn't one the app answers to.
+        client = TestClient(app, base_url="http://localhost").__enter__()
         clients.append(client)
         return client
 
@@ -219,6 +220,67 @@ def test_api_docs_are_off(make_client, path):
 @pytest.mark.parametrize("path", ["/static/index.html", "/static/nope.js", "/static/..%2fapi.py"])
 def test_only_listed_static_files_are_served(make_client, path):
     assert make_client().get(path).status_code == 404
+
+
+# --- Host names (DNS rebinding, docs/threat-model.md T3) -----------------------------------
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "localhost",
+        "localhost:8000",
+        "LOCALHOST",
+        "localhost.",
+        "127.0.0.1:7860",  # the image's health check
+        "[::1]:8000",
+    ],
+)
+def test_loopback_names_are_always_answered(make_client, host):
+    assert make_client().get("/healthz", headers={"host": host}).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "host", ["squeaktest.lan", "squeaktest.lan:8000", "SqueakTest.LAN", "192.168.1.50:8000"]
+)
+def test_listed_names_are_answered(make_client, host):
+    client = make_client(allowed_hosts=("squeaktest.lan", "192.168.1.50"))
+    assert client.get("/healthz", headers={"host": host}).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "evil.example",  # what a rebinding website's page sends
+        "evil.example:8000",
+        "localhost.evil.example",
+        "squeaktest.lan.evil.example",
+        "192.168.1.51",
+        "localhost:http",
+        "[::1",
+        "",
+    ],
+)
+def test_other_host_names_are_refused(make_client, host):
+    client = make_client(allowed_hosts=("squeaktest.lan", "192.168.1.50"))
+    response = client.get("/api/info", headers={"host": host})
+    assert response.status_code == 400
+    assert response.json()["error"] == "wrong_host"
+    assert "SQUEAKTEST_ALLOWED_HOSTS" in response.json()["message"]
+    assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
+
+
+def test_a_rebound_upload_is_refused_and_logged_without_the_name(
+    make_client, audio_fixtures, caplog
+):
+    caplog.set_level(logging.INFO, logger="squeaktest.api")
+    response = post_file(
+        make_client(), audio_fixtures["flac"], headers={**OCTET, "host": "evil.example:8000"}
+    )
+    assert response.status_code == 400
+    records = [json.loads(r.getMessage()) for r in caplog.records if r.name == "squeaktest.api"]
+    assert records == [{"event": "request", "outcome": "wrong_host"}]  # never analyzed
+    assert "evil.example" not in caplog.text
 
 
 # --- The page complies with the CSP --------------------------------------------------------
@@ -441,7 +503,7 @@ def test_a_client_gets_one_analysis_at_a_time(audio_fixtures):
 
     async def scenario() -> None:
         transport = httpx2.ASGITransport(app=app)
-        async with httpx2.AsyncClient(transport=transport, base_url="http://test") as client:
+        async with httpx2.AsyncClient(transport=transport, base_url="http://localhost") as client:
             first = asyncio.create_task(client.post("/api/analyze", content=data, headers=OCTET))
             await asyncio.sleep(0.5)  # the first is now being analyzed
             second = await client.post("/api/analyze", content=data, headers=OCTET)

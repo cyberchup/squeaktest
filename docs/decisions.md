@@ -769,6 +769,36 @@ slower.
 **Revisit:** if a public demo is wanted, on Hugging Face or squeaktest.com. The latency and
 memory figures above size what it would need.
 
+## D28. Answer only to known host names, against DNS rebinding (Phase 3)
+
+**Decision:** the web app answers a request only if its `Host` header names the machine itself
+(`localhost`, `127.0.0.1`, `::1`) or a host the operator lists in `SQUEAKTEST_ALLOWED_HOSTS`.
+Anything else gets 400, with a message naming the setting, and one metadata-only log line
+(`"outcome": "wrong_host"`). Names compare case-insensitively, and ports are ignored. Requested
+by Dylan on 2026-10-19 as the first fix from the threat model.
+
+**Why:**
+- It closes T3 in `docs/threat-model.md`. Without it, any website a LAN user visited could
+  point its own domain at squeaktest's address and use that user's browser to send crafted
+  files to the decoder. A rebound request still carries the attacker's host name, so it's
+  refused before any route runs.
+- The loopback names are always allowed. A rebinding page can't make the browser send them,
+  and the image's health check and local use depend on them. So the default is safe and needs
+  no setup, and the setting is only needed once the server listens on another address.
+- **Our own middleware, not Starlette's `TrustedHostMiddleware`.** Starlette's compares names
+  case-sensitively and answers in plain text. More to the point for a detection engineer, it
+  logs nothing. A refused `Host` is the only trace a rebinding attempt leaves, so it should be
+  a log line a SIEM can count. Ours is about 30 lines plus tests.
+- Wildcards and `*` are refused in the setting. An allowlist that allows everything would turn
+  the check off without anyone noticing.
+
+**Impact:** no effect on detection quality. Anyone reaching the server by a name or address
+that isn't listed gets the 400 and a message saying what to set. Behind a reverse proxy, either the
+proxy passes the original `Host` through (Caddy and Traefik do by default; nginx needs
+`proxy_set_header Host $host`), or the name it sends upstream must be listed.
+
+**Revisit:** if squeaktest moves behind a proxy that rewrites `Host`, or gets a public name.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)

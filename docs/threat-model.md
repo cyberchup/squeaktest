@@ -19,7 +19,8 @@ built.
   binds `127.0.0.1` today, so this needs a listen-address option (planned with the homelab
   setup).
 - No reverse proxy and no TLS: plain HTTP on the LAN. `SQUEAKTEST_PROXY_HOPS` stays 0 and
-  `SQUEAKTEST_FRAME_ANCESTORS` stays `'none'`.
+  `SQUEAKTEST_FRAME_ANCESTORS` stays `'none'`. `SQUEAKTEST_ALLOWED_HOSTS` lists the name or
+  address the host is reached by.
 - No accounts: anyone who can reach the port can use it.
 - The image is built from this repository on the host, either with the model inside
   (`WEIGHTS=included`) or with it mounted read-only.
@@ -113,7 +114,7 @@ Residual risk is rated for this deployment, after the controls that exist today.
 |---|---|---|---|
 | T1 | A crafted file exploits ffmpeg and runs code in the container | Partly mitigated | **Medium** |
 | T2 | A crafted file exhausts CPU or memory while decoding | Mitigated, tested | Low |
-| T3 | A website uses DNS rebinding to drive squeaktest from a LAN browser | **Open** | **Medium** |
+| T3 | A website uses DNS rebinding to drive squeaktest from a LAN browser | Mitigated, tested | Low |
 | T4 | A website sends uploads cross-site (CSRF) | Mitigated, tested | Low |
 | T5 | The page is framed or injected with script | Mitigated, tested | Low |
 | T6 | Logs, errors or caches leak audio or who uploaded it | Mitigated, tested | Low |
@@ -204,18 +205,26 @@ The browser treats both as the same origin, so the script can post files and rea
 responses. Browser same-origin rules, CORS and the content-type check don't stop this, because
 from the browser's point of view nothing is cross-site.
 
-**What it gains:** no stored results to steal, because nothing is stored. But it gives a
-website on the internet a way to deliver crafted files to the decoder (T1) without the analyst
-uploading anything. It can also use up the queue.
+**What it would gain:** no stored results to steal, because nothing is stored. But it would
+give a website on the internet a way to deliver crafted files to the decoder (T1) without the
+analyst uploading anything, and to use up the queue.
 
-**Controls today:** none specific. squeaktest doesn't check the `Host` header, so it answers to
-any name. The rate limit still applies, keyed on the LAN browser's address. Some browsers now
-ask before a public site can reach a local address; squeaktest doesn't rely on that.
+**Controls:**
+- The browser still sends the attacker's host name in the `Host` header, so squeaktest answers
+  only requests addressed to its loopback names (`localhost`, `127.0.0.1`, `::1`) or to a name
+  the operator lists in `SQUEAKTEST_ALLOWED_HOSTS`. Anything else gets 400 before any route
+  runs, so an upload is never read (D28). Tested:
+  `tests/test_api.py::test_other_host_names_are_refused`,
+  `::test_a_rebound_upload_is_refused_and_logged_without_the_name`,
+  `::test_loopback_names_are_always_answered`, `::test_listed_names_are_answered`.
+- Each refusal leaves one metadata-only log line (`"outcome": "wrong_host"`). A run of them
+  from an otherwise quiet LAN service is worth an alert.
+- The rate limit still applies, keyed on the LAN browser's address. Some browsers now ask
+  before a public site can reach a local address; squeaktest doesn't rely on that.
 
-**Would fix it:** accept only the host names the operator lists, for example a
-`SQUEAKTEST_ALLOWED_HOSTS` setting on Starlette's `TrustedHostMiddleware`. A rebound request
-carries the attacker's host name, so it would be refused. This is the cheapest open fix in this
-document.
+**What's left:** an operator who lists a name an attacker controls would undo it. A live
+rebinding attack wasn't tried; the check was tested through the app and with `curl` against a
+running server.
 
 ### T4. Cross-site uploads (CSRF)
 
@@ -401,8 +410,8 @@ answer. The full analysis is planned for Phase 5. Known so far:
 
 In order of value for effort:
 
-1. **Check the `Host` header** (T3). A small code change: a setting listing the host names to
-   accept. It closes the one way an internet site can reach the decoder.
+1. ~~**Check the `Host` header** (T3).~~ Done on 2026-10-19 (D28): it closed the one way an
+   internet site could reach the decoder.
 2. **Block the container's outbound traffic** at the host firewall (T1). Host configuration
    only; the app needs no network at runtime.
 3. **Add a restart policy and a LAN listen address to `compose.yaml`** (T9, T12). Part of the
@@ -425,12 +434,13 @@ In order of value for effort:
   - What exploit code could reach as UID 1000 (T1).
   - How uvicorn handles slow headers (T11).
   - Memory use under full load (T12).
-  - DNS rebinding in practice (T3): inferred from the code, which has no `Host` check.
+  - A live DNS rebinding attack (T3). The `Host` check that stops it is tested.
 
 ## Revisit when
 
-- The service is reachable from outside the LAN. That needs TLS, the `Host` check, accounts or
-  an allowlist, a verified proxy hop count, and a new look at D27.
+- The service is reachable from outside the LAN. That needs TLS, accounts or an allowlist of
+  clients, a verified proxy hop count, its public name in `SQUEAKTEST_ALLOWED_HOSTS`, and a new
+  look at D27.
 - squeaktest starts storing anything: results, uploads or a history.
 - A new format or codec is allowed, which means new decoders in reach.
 - The SIEM event (Phase 5) adds identifiers to the output.

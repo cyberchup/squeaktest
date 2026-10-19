@@ -70,6 +70,7 @@ def test_server_defaults():
     assert s.max_waiting == 4
     assert s.proxy_hops == 0
     assert s.frame_ancestors == "'none'"
+    assert s.allowed_hosts == ()
     assert ServerSettings.from_env({}) == s
 
 
@@ -81,9 +82,12 @@ def test_server_environment_overrides():
             "SQUEAKTEST_UPLOAD_TIMEOUT_S": "20",
             "SQUEAKTEST_PROXY_HOPS": "1",
             "SQUEAKTEST_FRAME_ANCESTORS": "https://huggingface.co",
+            "SQUEAKTEST_ALLOWED_HOSTS": " SqueakTest.lan, 192.168.1.50 ,[fd00::5],, homelab.local.",
         }
     )
-    assert s == ServerSettings(3, 0, 20.0, 1, "https://huggingface.co")
+    hosts = ("squeaktest.lan", "192.168.1.50", "fd00::5", "homelab.local")
+    assert s == ServerSettings(3, 0, 20.0, 1, "https://huggingface.co", hosts)
+    assert s.allowed_hosts == hosts  # normalized: lower case, no brackets or trailing dot
 
 
 @pytest.mark.parametrize(
@@ -98,6 +102,14 @@ def test_server_environment_overrides():
         ("SQUEAKTEST_FRAME_ANCESTORS", "'self'; script-src *"),
         ("SQUEAKTEST_FRAME_ANCESTORS", "https://a.example, https://b.example"),
         ("SQUEAKTEST_FRAME_ANCESTORS", "   "),
+        # Host names only: a port, scheme, path or wildcard is a mistake worth stopping on.
+        ("SQUEAKTEST_ALLOWED_HOSTS", "squeaktest.lan:8000"),
+        ("SQUEAKTEST_ALLOWED_HOSTS", "http://squeaktest.lan"),
+        ("SQUEAKTEST_ALLOWED_HOSTS", "squeaktest.lan/"),
+        ("SQUEAKTEST_ALLOWED_HOSTS", "*"),
+        ("SQUEAKTEST_ALLOWED_HOSTS", "*.lan"),
+        ("SQUEAKTEST_ALLOWED_HOSTS", "squeak test.lan"),
+        ("SQUEAKTEST_ALLOWED_HOSTS", "-squeaktest.lan"),
     ],
 )
 def test_invalid_server_values_are_rejected(var: str, value: str):

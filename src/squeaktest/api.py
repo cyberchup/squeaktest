@@ -14,6 +14,9 @@ Uploads are untrusted, and they are sensitive (a voice is biometric data). So:
   straight away. Each client is also rate limited (D25).
 - Logs hold request metadata only: outcome, band, sizes and timings. Never audio, never a
   client's address, never a score.
+- Only requests addressed to this machine's loopback names, or to a host name the operator
+  lists (`SQUEAKTEST_ALLOWED_HOSTS`), are answered. That stops a website from using DNS
+  rebinding to reach the app through a visitor's browser (docs/threat-model.md T3).
 - Every response carries security headers, including a Content Security Policy that allows
   only squeaktest's own scripts, styles and requests. There is no CORS, so other sites can't
   read results, and the API docs pages are off (they load scripts from a third-party CDN).
@@ -37,6 +40,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 import numpy as np
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
+from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from squeaktest import __version__
@@ -47,7 +51,7 @@ from squeaktest.audio import (
     check_tools,
     load_audio_bytes,
 )
-from squeaktest.config import MB, ServerSettings, Settings
+from squeaktest.config import LOOPBACK_HOSTS, MB, ServerSettings, Settings, normalize_host
 from squeaktest.inference import WindowingConfig, analyze
 from squeaktest.report import DISCLAIMER, SCORE_NOTE, build_report
 
@@ -120,6 +124,8 @@ def create_app(
         openapi_url=None,
         lifespan=lifespan,
     )
+    # Added first, so it sits inside SecurityHeaders and its refusals get the headers too.
+    app.add_middleware(HostCheck, allowed_hosts=server.allowed_hosts)
     app.add_middleware(SecurityHeaders, frame_ancestors=server.frame_ancestors)
 
     def score(data: bytes) -> dict[str, Any]:
@@ -358,6 +364,54 @@ def client_address(request: Request, proxy_hops: int) -> str:
         if len(forwarded) >= proxy_hops:
             return forwarded[-proxy_hops]
     return request.client.host if request.client else "unknown"
+
+
+WRONG_HOST_MESSAGE = (
+    "This server doesn't answer to that host name. If you run it, add the name to "
+    "SQUEAKTEST_ALLOWED_HOSTS."
+)
+
+
+class HostCheck:
+    """Answers only requests addressed to one of this server's own names (plain ASGI middleware).
+
+    A website can point its own domain at this server's address (DNS rebinding). The visitor's
+    browser then treats squeaktest as part of that website and lets its scripts upload files
+    and read the results. But the browser still sends the website's name in the Host header,
+    so only loopback names and the names the operator listed are answered.
+    """
+
+    def __init__(self, app: ASGIApp, allowed_hosts: Sequence[str]) -> None:
+        self.app = app
+        self.allowed = LOOPBACK_HOSTS | frozenset(allowed_hosts)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or self._allowed(Headers(scope=scope).get("host", "")):
+            await self.app(scope, receive, send)
+            return
+        # Metadata only, like every other line: the name itself is the caller's text. A run of
+        # these is what a rebinding attempt looks like in the logs.
+        log.info(json.dumps({"event": "request", "outcome": "wrong_host"}))
+        await _error(400, "wrong_host", WRONG_HOST_MESSAGE)(scope, receive, send)
+
+    def _allowed(self, header: str) -> bool:
+        host = request_host(header)
+        return host is not None and host in self.allowed
+
+
+def request_host(header: str) -> str | None:
+    """The host name in a Host header, normalized and without its port; None if malformed."""
+    if header.startswith("["):  # an IPv6 address, as in [::1]:8000
+        end = header.find("]")
+        if end == -1:
+            return None
+        name, rest = header[1:end], header[end + 1 :]
+    else:
+        name, colon, port = header.partition(":")
+        rest = colon + port
+    if rest and not (rest.startswith(":") and rest[1:].isascii() and rest[1:].isdigit()):
+        return None
+    return normalize_host(name)
 
 
 class SecurityHeaders:

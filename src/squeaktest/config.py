@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ipaddress
 import math
 import os
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -63,6 +65,11 @@ class ServerSettings:
     # Who may show the page in a frame (CSP frame-ancestors). Hugging Face shows a Space's page
     # inside huggingface.co, so a Space needs "https://huggingface.co".
     frame_ancestors: str = "'none'"
+    # Host names and addresses the app answers to, besides LOOPBACK_HOSTS: the ones people type
+    # to reach it, such as "squeaktest.lan" or "192.168.1.50". A browser always sends the name
+    # from its address bar, so a website that points its own domain at this server (DNS
+    # rebinding) is refused (docs/threat-model.md T3).
+    allowed_hosts: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.rate_limit_per_minute < 1:
@@ -75,10 +82,41 @@ class ServerSettings:
         # directive or the header.
         if not self.frame_ancestors.strip() or any(c in self.frame_ancestors for c in ";,\r\n"):
             raise ValueError("frame_ancestors must be a CSP source list")
+        hosts = tuple(normalize_host(host) for host in self.allowed_hosts)
+        for raw, host in zip(self.allowed_hosts, hosts, strict=True):
+            if not _is_host(host):
+                raise ValueError(
+                    "allowed_hosts must be host names or IP addresses, without a scheme, port "
+                    f"or path: {raw!r}"
+                )
+        object.__setattr__(self, "allowed_hosts", hosts)  # frozen: set once, normalized
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> ServerSettings:
         return _from_env(cls, _SERVER_ENV_VARS, environ)
+
+
+# The machine itself, which the web app always answers to. A rebinding website can't use these:
+# the browser would send them only for a page that was itself loaded from this machine.
+LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+_HOST_NAME = re.compile(r"[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?(\.[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?)*")
+
+
+def normalize_host(name: str) -> str:
+    """A host name ready to compare: lower case, no trailing dot, IPv6 without brackets."""
+    name = name.strip().lower().removesuffix(".")
+    if name.startswith("[") and name.endswith("]"):
+        name = name[1:-1]
+    return name
+
+
+def _is_host(name: str) -> bool:
+    try:
+        ipaddress.ip_address(name)
+    except ValueError:
+        return _HOST_NAME.fullmatch(name) is not None
+    return True
 
 
 def _from_env[T](
@@ -100,6 +138,10 @@ def _from_env[T](
         return cls(**kwargs)
     except ValueError as exc:
         raise ValueError(f"invalid squeaktest setting: {exc}") from None
+
+
+def _host_list(raw: str) -> tuple[str, ...]:
+    return tuple(part.strip() for part in raw.split(",") if part.strip())
 
 
 def _megabytes(raw: str) -> int:
@@ -125,4 +167,5 @@ _SERVER_ENV_VARS: dict[str, tuple[str, Callable[[str], Any]]] = {
     "SQUEAKTEST_UPLOAD_TIMEOUT_S": ("upload_timeout_s", float),
     "SQUEAKTEST_PROXY_HOPS": ("proxy_hops", int),
     "SQUEAKTEST_FRAME_ANCESTORS": ("frame_ancestors", str),
+    "SQUEAKTEST_ALLOWED_HOSTS": ("allowed_hosts", _host_list),
 }
