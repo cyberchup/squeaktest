@@ -123,7 +123,7 @@ Residual risk is rated for this deployment, after the controls that exist today.
 | T9 | Anyone on the LAN uses the service | Accepted | Low |
 | T10 | A client dodges the rate limit with a forged address | Mitigated, tested | Low |
 | T11 | Slow or numerous connections lock others out | Mostly mitigated | Low |
-| T12 | Memory runs out under load and the service stays down | Partly mitigated | Low |
+| T12 | Memory runs out under load and the service stays down | Mostly mitigated | Low |
 | T13 | An upload is left behind on disk | Mitigated, tested | Low |
 | T14 | Tampered model weights | Mitigated, tested | Low |
 | T15 | A tampered or vulnerable dependency in the image | Partly mitigated | Low to medium |
@@ -151,7 +151,10 @@ author only needs someone to upload the file.
 - Decoding runs in a separate process with one thread, and is killed after 30 s.
 - In the container the app is UID 1000, with no capabilities and no privilege escalation, and
   everything but `/tmp` is read-only. Its code and model are owned by root, so even UID 1000
-  can't change them. Checked on every push by `scripts/check_image.sh`.
+  can't change them. Checked on every push by `scripts/check_image.sh`. The README's
+  `docker run` command, for an image with the model inside, sets the same restrictions as
+  `compose.yaml`; `tests/test_package.py::test_readme_docker_run_keeps_the_hardening_in_compose`
+  fails if the two drift apart.
 - ffmpeg comes from Debian's packages, which Debian's security team patches (7.1.5 at the
   first build).
 - **Detection.** If ffprobe or ffmpeg is killed instead of exiting (a signal such as SIGSEGV or
@@ -282,8 +285,9 @@ running server.
 - Client addresses are kept in memory only, for rate limiting, and forgotten within about two
   minutes (D25). Tested: `::test_rate_limiter_forgets_clients_once_their_limit_has_reset`.
 
-**What's left:** Docker keeps the container's log on the host with no size limit by default.
-It's metadata only, but it does show when the service was used.
+**What's left:** Docker keeps the container's log on the host. `compose.yaml` and the README's
+`docker run` command cap it at three 10 MB files, but within that it's kept until the container
+is removed. It's metadata only, but it does show when the service was used.
 
 ### T7 and T8. Reading or changing traffic on the LAN
 
@@ -347,8 +351,12 @@ The worst case is about 800 MB of uploads arriving (32 connections at 25 MB), 12
 (5 at 25 MB), and the model's 2.84 GB peak (measured, D27): about 3.8 GB, under the 6 GB limit.
 *Estimated, not measured under load.*
 
-**What's left:** if the container is killed for running out of memory, `compose.yaml` has no
-restart policy, so it stays down. **Would fix it:** `restart: unless-stopped`.
+**Controls:** if the container is killed for running out of memory, it comes back:
+`compose.yaml` and the README's `docker run` command both set `restart: unless-stopped`. A
+decoder killed by the kernel's out-of-memory killer is logged as `decoder_crashed` (T1).
+
+**What's left:** the restart policy hasn't been seen working, since `docker compose up` itself
+is untested. Memory use under full load is estimated, not measured.
 
 ### T13. Uploads left on disk
 
@@ -423,8 +431,8 @@ In order of value for effort:
    internet site could reach the decoder.
 2. **Block the container's outbound traffic** at the host firewall (T1). Host configuration
    only; the app needs no network at runtime.
-3. **Add a restart policy and a LAN listen address to `compose.yaml`** (T9, T12). Part of the
-   homelab setup.
+3. **Add a LAN listen address to `compose.yaml`** (T9). Part of the homelab setup. The restart
+   policy and a log size cap were added on 2026-10-19 (T12, T6).
 4. **Scan the image and rebuild it on a schedule** (T1, T15). A CI job.
 5. **TLS through a reverse proxy before real recordings** (T7, T8). Homelab setup, then verify
    the proxy hop count.
@@ -438,7 +446,8 @@ In order of value for effort:
 - **Measured once:** the image with the model inside, running under `compose.yaml`'s
   restrictions: 2.84 GB peak memory, about 21 s per 60-second clip (D27).
 - **Unverified:**
-  - `docker compose up` itself.
+  - `docker compose up` itself, including its restart policy and log cap, and the README's
+    `docker run` command as a whole.
   - That a real decoder crash reaches the log as `decoder_crashed` inside the container. The
     tests simulate the crash's return code rather than crashing ffmpeg.
   - The LAN listen address, which doesn't exist yet.

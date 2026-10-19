@@ -74,11 +74,24 @@ docker compose up                         # then open http://127.0.0.1:8000
 
 This uses the model you downloaded with `fetch-model`: set `SQUEAKTEST_DATA_DIR` to that folder
 first, and it's mounted read-only. The container runs as a non-root user with a read-only
-filesystem, no Linux capabilities, and CPU and memory limits ([D26](docs/decisions.md)). To
-build an image with the model inside, so nothing needs mounting, run
-`docker build -t squeaktest .`, then `docker run -p 127.0.0.1:8000:7860 squeaktest`.
+filesystem, no Linux capabilities, and CPU and memory limits ([D26](docs/decisions.md)). It
+restarts if it's killed, and its log is capped at 30 MB.
 
-*Not yet tested:* `docker compose up` itself. CI builds the image and checks its hardening on
+To build an image with the model inside, so nothing needs mounting, run this. Keep every flag:
+they're the same protections `compose.yaml` sets, and a plain `docker run` has none of them.
+
+```bash
+docker build -t squeaktest .
+docker run -d --name squeaktest -p 127.0.0.1:8000:7860 \
+  --read-only --tmpfs /tmp:size=256m,mode=1777 --cap-drop ALL \
+  --security-opt no-new-privileges --cpus 2 --memory 6g --pids-limit 256 \
+  -e OMP_NUM_THREADS=2 --restart unless-stopped \
+  --log-opt max-size=10m --log-opt max-file=3 squeaktest
+```
+
+*Not yet tested:* `docker compose up` itself, and the `docker run` command above as a whole (the
+latency workflow uses its hardening flags, but not the restart and log options). CI builds the
+image and checks its hardening on
 every push, and a workflow run by hand (`.github/workflows/latency.yml`) builds the image with
 the model inside and times it under `compose.yaml`'s limits.
 

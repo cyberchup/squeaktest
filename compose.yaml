@@ -30,3 +30,14 @@ services:
     pids_limit: 256
     environment:
       OMP_NUM_THREADS: "2"  # match the CPU limit; PyTorch can't see it otherwise
+    # Comes back if it's killed (say, for running out of memory) or Docker restarts, unless you
+    # stopped it yourself (docs/threat-model.md T12).
+    restart: unless-stopped
+    # Docker keeps the log on the host; cap it at three 10 MB files (T6).
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # The README's `docker run` command for an image with the model inside repeats these
+    # settings; tests/test_package.py checks that the two match.
