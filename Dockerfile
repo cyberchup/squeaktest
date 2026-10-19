@@ -1,8 +1,8 @@
-# squeaktest web app: one image for local use (`docker compose up`) and the Hugging Face Space.
+# squeaktest web app: one image for local use (`docker compose up`) and self-hosting.
 #
 # Build argument WEIGHTS:
 #   included (default)  The model is downloaded at build time and its SHA-256 checked, so the
-#                       running container never needs the network. The Space builds this.
+#                       running container never needs the network or a mounted folder.
 #   mounted             No model in the image. Mount a folder holding models/ at
 #                       /opt/squeaktest-data/models, read-only (compose.yaml does this).
 #
@@ -48,7 +48,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends ffmpeg \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --create-home --uid 1000 user
-# Copied as root and left that way: the app runs as UID 1000 (Hugging Face's requirement) and
+# Copied as root and left that way: the app runs as UID 1000 (also what Hugging Face needs) and
 # can read its code and model but not change them. It only writes temporary files under /tmp.
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=weights /opt/squeaktest-data /opt/squeaktest-data

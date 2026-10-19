@@ -1,8 +1,8 @@
 name: Latency
 
 # Run by hand from the Actions tab, or with `gh workflow run latency.yml`. Builds the image with
-# the model inside, as a hosted demo would run it, and times a 60-second clip on 2 CPUs. A
-# GitHub runner's shared cloud vCPUs stand in for a 2-vCPU host (docs/decisions.md D22).
+# the model inside and times a 60-second clip on 2 CPUs. A GitHub runner's shared cloud vCPUs
+# stand in for a small 2-vCPU host (docs/decisions.md D27).
 on:
   workflow_dispatch:
 

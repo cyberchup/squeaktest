@@ -11,7 +11,7 @@ Repo: https://github.com/cyberchup/squeaktest
 ## Purpose and audience
 
 - This is a portfolio project. It should show detection-engineering thinking to security employers: honest evaluation, calibrated output, documented limitations, and secure handling of sensitive input.
-- It should run locally (Docker or CLI) and be hosted publicly on Hugging Face Spaces, and later on squeaktest.com.
+- It runs locally (Docker or CLI) and self-hosted on Dylan's homelab. There's no public hosting for now (D27, 2026-10-19); Hugging Face Spaces or squeaktest.com stay possible later.
 - Credibility matters more than flashy claims. Never overstate accuracy.
 
 ## Commands
@@ -71,11 +71,11 @@ Proposed (validate in Phase 1):
 
 Confirmed (Phase 3, 2026-10-13):
 - Backend: FastAPI on uvicorn. UI: one static HTML page with plain JavaScript and CSS, served by the FastAPI app; no Gradio (D23).
-- Hosting: one Docker image for local use, self-hosting and a Docker Space on HF's free CPU tier; not ZeroGPU (D22).
+- Hosting: one Docker image for local use and self-hosting. No hosted demo for now (D27, 2026-10-19, replacing D22's free-tier Docker Space, which now needs a paid plan).
 
 ## Hosting and data
 
-- **Hosting:** Hugging Face Spaces free CPU tier for now. The chosen model must run acceptably on CPU. Keep backends device-agnostic so a paid GPU tier can be added later without a rewrite. The hosted demo may use a lower maximum duration than local runs.
+- **Hosting:** self-hosted only for now: Docker on Dylan's homelab (D27). The model must still run acceptably on CPU (about 21 s per 60-second clip on 2 CPUs, 2.84 GB peak memory). Keep backends device-agnostic so a GPU can be added later without a rewrite.
 - **Data:** Datasets and model weights live outside the repo, in the directory set by `SQUEAKTEST_DATA_DIR`, and are fetched by script. Never commit them.
 
 ## Proposed repo layout
@@ -129,7 +129,7 @@ Then stop and get Dylan's sign-off.
 FastAPI with a plain HTML page for upload, score, band, and segment timeline. Every security requirement above must be implemented and tested: rate limiting, security headers, locked-down CORS, a non-root container with a read-only filesystem. Add a `docker compose up` local run and a first `docs/threat-model.md` for the upload pipeline.
 
 **Phase 4 (v1.0): Publish.**
-README badges, an HF Spaces deployment, then point squeaktest.com at it.
+README badges and a self-hosted deployment on Dylan's homelab (D27). A public deployment (Hugging Face Spaces, squeaktest.com) is off for now.
 
 **Phase 5: Stretch goals.**
 Spectrogram and attention visualization, an ensemble of models, a full robustness suite (noise, reverb and more codecs), the adversarial-evasion section of `docs/threat-model.md`, and SIEM integration as in promptbadger: the SIEM event (proposal and open decisions in `docs/siem-event.md`) plus Microsoft Sentinel content (analytics rule and hunting KQL over those events).

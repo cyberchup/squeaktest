@@ -1,5 +1,5 @@
 #!/bin/sh
-# Time the web app on a 60-second clip, the hosted demo's longest, with 2 CPUs.
+# Time the web app on a 60-second clip with 2 CPUs (docs/decisions.md D27).
 #
 #   scripts/measure_latency.sh [engine] [image] [requests]    defaults: docker squeaktest:local 4
 #

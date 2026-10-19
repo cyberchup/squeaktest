@@ -4,11 +4,11 @@
 
 > Real curds squeak. Fakes don't.
 
-**squeaktest** estimates whether speech in an audio clip is synthetic (AI-generated or voice-cloned). Instead of a yes/no verdict, it gives a score and one of three bands (*Likely synthetic*, *Uncertain*, *Likely genuine*), and shows which parts of the clip look suspicious. Its accuracy is measured on audio and generators it wasn't trained on, and all results are published, including the weak ones. Voice counts as biometric data, so audio is never kept or logged ([How your audio is handled](#how-your-audio-is-handled)). It runs locally as a command-line tool or a small web app, directly or in Docker; a hosted demo is planned.
+**squeaktest** estimates whether speech in an audio clip is synthetic (AI-generated or voice-cloned). Instead of a yes/no verdict, it gives a score and one of three bands (*Likely synthetic*, *Uncertain*, *Likely genuine*), and shows which parts of the clip look suspicious. Its accuracy is measured on audio and generators it wasn't trained on, and all results are published, including the weak ones. Voice counts as biometric data, so audio is never kept or logged ([How your audio is handled](#how-your-audio-is-handled)). It runs locally as a command-line tool or a small web app, directly or in Docker. There's no hosted demo: it runs wherever you run it.
 
 ## Status
 
-Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app runs locally, and a hardened Docker image is built and checked in CI; a hosted demo comes next (Phase 3).
+Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app runs locally, and a hardened Docker image is built and checked in CI. There's no hosted demo for now ([D27](docs/decisions.md)); a threat model for the upload pipeline comes next (Phase 3).
 
 The research behind the model and dataset choices is in [docs/research.md](docs/research.md). Every design choice, with its effect on missed fakes and false positives, is in [docs/decisions.md](docs/decisions.md). What the model is for, and what it isn't, is in the [model card](docs/model-card.md).
 
@@ -31,7 +31,9 @@ Exit codes: `0` analysis finished, `1` input rejected, `2` setup problem (for ex
 model hasn't been downloaded).
 
 Speed, measured on one machine: about 1 second per minute of audio on an RTX 3050 GPU, and
-15-28 seconds on CPU ([D15](docs/decisions.md), [D17](docs/decisions.md)).
+15-28 seconds on CPU ([D15](docs/decisions.md), [D17](docs/decisions.md)). The Docker image,
+limited to 2 CPUs on a GitHub runner, takes about 21 seconds for a 60-second clip and peaks at
+2.8 GB of memory ([D27](docs/decisions.md)).
 
 ### Web app
 
@@ -70,11 +72,12 @@ docker compose up                         # then open http://127.0.0.1:8000
 This uses the model you downloaded with `fetch-model`: set `SQUEAKTEST_DATA_DIR` to that folder
 first, and it's mounted read-only. The container runs as a non-root user with a read-only
 filesystem, no Linux capabilities, and CPU and memory limits ([D26](docs/decisions.md)). To
-build an image with the model inside, as the hosted demo will, run `docker build -t squeaktest .`,
-then `docker run -p 127.0.0.1:8000:7860 squeaktest`.
+build an image with the model inside, so nothing needs mounting, run
+`docker build -t squeaktest .`, then `docker run -p 127.0.0.1:8000:7860 squeaktest`.
 
-*Not yet tested:* CI builds the image and checks its hardening on every push, but
-`docker compose up` itself and an image with the model inside haven't been run yet.
+*Not yet tested:* `docker compose up` itself. CI builds the image and checks its hardening on
+every push, and a workflow run by hand (`.github/workflows/latency.yml`) builds the image with
+the model inside and times it under `compose.yaml`'s limits.
 
 ## Results
 
@@ -111,7 +114,7 @@ The model is shipped as NII published it, with these limits documented, rather t
 
 ## How your audio is handled
 
-A voice can identify a person, so squeaktest treats every recording as sensitive. This describes the command-line tool and the web app running on your own machine. The hosted demo will get its own notes here, since Hugging Face's servers sit between you and it.
+A voice can identify a person, so squeaktest treats every recording as sensitive. This describes the command-line tool and the web app running on your own machine or server. There's no hosted demo, so no one else's servers are involved.
 
 - **It stays on your machine.** Analysis runs locally, and squeaktest makes no network requests while analyzing. The only download is the model, and only when you run `fetch-model`.
 - **It isn't kept.** To decode a file, squeaktest copies it into a new temporary folder under a fixed name (never your file's name), decodes it, and deletes the folder straight away, whether decoding worked or not. The decoded audio is held in memory and is gone when the command finishes. Your original file is only read, never changed. One exception: if the computer crashes or loses power mid-decode, the copy can be left in your temp folder (or in `SQUEAKTEST_TEMP_DIR`, if you set it).

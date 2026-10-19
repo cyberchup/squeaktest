@@ -531,6 +531,9 @@ different data makes different mistakes, which is what an ensemble needs.
 
 ## D22. Host on a Docker Space on the free CPU tier, not ZeroGPU (Phase 3)
 
+**Status:** replaced by D27 on 2026-10-19. Docker Spaces now need a paid plan, and there is no
+hosted demo for now.
+
 **Decision:** the public demo runs squeaktest's own Docker image on Hugging Face's free CPU
 tier (2 vCPU, 16 GB). The same image serves local `docker compose` use (Dylan, 2026-10-13).
 
@@ -704,9 +707,10 @@ code and model, offline libraries, and pinned contents.
   digests are bumped. Neither is automated yet.
 - `WEIGHTS=included` adds about 1.3 GB to the image; the container itself never needs the
   network.
-- **Untested:** `docker compose up` itself (no local container engine was available) and a
-  `WEIGHTS=included` build. CI builds the image without the model and checks its hardening on
-  every push (`scripts/check_image.sh`).
+- **Untested:** `docker compose up` itself (no local container engine was available). CI builds
+  the image without the model and checks its hardening on every push
+  (`scripts/check_image.sh`). A `WEIGHTS=included` build was first run on 2026-10-19, by the
+  manual latency workflow (D27), which also ran it with `compose.yaml`'s restrictions.
 
 **Residual risk (for the threat model):** a code-execution bug in an allowed decoder or demuxer
 would still run as UID 1000 inside the container, the same user as the app. From there it may
@@ -716,6 +720,54 @@ sandbox (its own user or container, a seccomp profile) is a Phase 5 candidate.
 **Revisit:** set up a scheduled rebuild with digest updates; act at once when an ffmpeg advisory
 affects an allowed decoder or demuxer; and revisit if Hugging Face lets Spaces set runtime
 restrictions.
+
+## D27. No hosted demo for now: the code on GitHub, self-hosted on Dylan's homelab (Phase 3)
+
+**Decision:** squeaktest isn't hosted publicly for now. The code, results and Docker image
+stay on GitHub, and Dylan runs it on a homelab for testing. Replaces D22 (Dylan, 2026-10-19).
+
+**Why:**
+- D22's premise is gone: Hugging Face now needs PRO ($9 a month) to host a Docker or Gradio
+  Space. Free accounts can only make Static Spaces, which can't run a server.
+- The project's audience is security employers reading the repository: the evaluation, the
+  decision records, the threat model and the hardening. A live demo adds little to that, and
+  self-hosting the image is a fair test of the image itself.
+- The other free options don't fit. Free tiers with 512 MB of memory can't hold the model (2.84
+  GB peak, below). Running the model in the visitor's browser would keep audio on their device,
+  but this model is too large for that; it would mean a smaller or quantized model and new
+  evaluation runs. Google Cloud Run might be free for light use but needs a card on file and
+  spending caps.
+
+**Measured** with `.github/workflows/latency.yml` (run by hand) on 2026-10-19: the
+`WEIGHTS=included` image on a GitHub runner (Intel Xeon Platinum 8370C), limited to 2 CPUs, with
+`compose.yaml`'s other restrictions. The clip is 60 s of synthetic buzz with every window
+scored, the worst case for its length.
+
+| Measure | Result |
+|---|---|
+| 60 s clip, first request | 21.9 s |
+| 60 s clip, three more requests | 20.4, 20.7, 20.8 s |
+| Startup, until the server answers | 7 s |
+| Peak container memory | 2.84 GB |
+| Image size | 2.95 GB |
+
+That's faster than D17's 28.1 s on 2 desktop threads, so CPU speed isn't a reason to change
+the model (D22's revisit options). One run on one runner type: another host's 2 vCPUs may be
+slower.
+
+**Impact:**
+- Nothing in the code changes. The settings meant for a Space stay as general options:
+  `SQUEAKTEST_PROXY_HOPS` for any reverse proxy in front of the app, and
+  `SQUEAKTEST_FRAME_ANCESTORS` for any site that frames the page.
+- Wherever squeaktest runs now, its operator controls the container. So `compose.yaml`'s
+  read-only filesystem, dropped capabilities and resource limits can apply everywhere, which
+  closes the gap D26 noted for Spaces.
+- Still unverified: the proxy hop count behind a real reverse proxy, and `docker compose up`
+  itself. Both get checked on the homelab.
+- The threat model (Phase 3) covers a self-hosted deployment, not a public one.
+
+**Revisit:** if a public demo is wanted, on Hugging Face or squeaktest.com. The latency and
+memory figures above size what it would need.
 
 ## Known gaps
 
