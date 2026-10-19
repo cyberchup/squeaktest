@@ -1,0 +1,26 @@
+name: Latency
+
+# Run by hand from the Actions tab, or with `gh workflow run latency.yml`. Builds the image with
+# the model inside, as a hosted demo would run it, and times a 60-second clip on 2 CPUs. A
+# GitHub runner's shared cloud vCPUs stand in for a 2-vCPU host (docs/decisions.md D22).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Downloads the 1.27 GB model and checks its SHA-256 during the build.
+      - name: Build the image with the model inside
+        run: docker build --build-arg WEIGHTS=included -t squeaktest:latency .
+      - name: Disk use
+        run: df -h / && docker system df
+      - name: Time a 60-second clip
+        run: sh scripts/measure_latency.sh docker squeaktest:latency
