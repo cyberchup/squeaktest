@@ -8,7 +8,7 @@
 
 ## Status
 
-Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app runs locally, and a hardened Docker image is built, run with `docker compose up` and checked in CI. There's no hosted demo for now ([D27](docs/decisions.md)); it's self-hosted, and the [threat model](docs/threat-model.md) covers running it on a home network.
+Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app and its hardened Docker image are done (Phase 3): CI builds the image, runs it with `docker compose up` and checks it on every push. There's no hosted demo for now ([D27](docs/decisions.md)); it's self-hosted, and the [threat model](docs/threat-model.md) covers running it on a home network.
 
 The research behind the model and dataset choices is in [docs/research.md](docs/research.md). Every design choice, with its effect on missed fakes and false positives, is in [docs/decisions.md](docs/decisions.md). What the model is for, and what it isn't, is in the [model card](docs/model-card.md). What could go wrong with the web app, what stops it, and what's still open is in the [threat model](docs/threat-model.md).
 

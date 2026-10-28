@@ -125,7 +125,7 @@ Then stop and get Dylan's sign-off.
 - Write `docs/model-card.md` and put a results table, with known gaps, in the README.
 - Decision gate: if out-of-domain results are poor, Dylan decides whether to ship with documented limits, switch models, or fine-tune.
 
-**Phase 3 (v0.3): Web app plus Docker.**
+**Phase 3 (v0.3): Web app plus Docker (done 2026-10-28; what's still open is in `docs/threat-model.md`).**
 FastAPI with a plain HTML page for upload, score, band, and segment timeline. Every security requirement above must be implemented and tested: rate limiting, security headers, locked-down CORS, a non-root container with a read-only filesystem. Add a `docker compose up` local run and a first `docs/threat-model.md` for the upload pipeline.
 
 **Phase 4 (v1.0): Publish.**
