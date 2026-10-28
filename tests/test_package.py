@@ -23,7 +23,7 @@ HARDENING = [
 
 
 def test_version_matches_package_metadata():
-    assert squeaktest.__version__ == "0.2.0"
+    assert squeaktest.__version__ == "0.3.0"
 
 
 def test_readme_docker_run_keeps_the_hardening_in_compose():
