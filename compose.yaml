@@ -2,6 +2,16 @@
 #
 # Uses the model you already downloaded with `squeaktest fetch-model`: set SQUEAKTEST_DATA_DIR
 # to that folder (the one holding models/). It is mounted read-only.
+#
+# On a home server, to reach it from the rest of the LAN, also set SQUEAKTEST_LISTEN_ADDRESS to
+# the server's LAN address, and list that address (and any name people will type) in
+# SQUEAKTEST_ALLOWED_HOSTS. A .env file next to this one keeps them:
+#
+#   SQUEAKTEST_LISTEN_ADDRESS=192.168.1.50
+#   SQUEAKTEST_ALLOWED_HOSTS=192.168.1.50,squeaktest.lan
+#
+# Name the address; don't use 0.0.0.0. Docker's published ports go around host firewalls such
+# as ufw, so 0.0.0.0 means every network the server is on (docs/threat-model.md T9, D30).
 services:
   squeaktest:
     build:
@@ -10,7 +20,7 @@ services:
         WEIGHTS: mounted
     image: squeaktest:local
     ports:
-      - "127.0.0.1:8000:7860"  # this machine only
+      - "${SQUEAKTEST_LISTEN_ADDRESS:-127.0.0.1}:8000:7860"  # this machine only, unless set
     volumes:
       - type: bind
         source: ${SQUEAKTEST_DATA_DIR:?set SQUEAKTEST_DATA_DIR to the folder holding models/}/models
@@ -30,6 +40,8 @@ services:
     pids_limit: 256
     environment:
       OMP_NUM_THREADS: "2"  # match the CPU limit; PyTorch can't see it otherwise
+      # Names it answers to besides localhost (D28). Empty means none.
+      SQUEAKTEST_ALLOWED_HOSTS: ${SQUEAKTEST_ALLOWED_HOSTS:-}
     # Comes back if it's killed (say, for running out of memory) or Docker restarts, unless you
     # stopped it yourself (docs/threat-model.md T12).
     restart: unless-stopped

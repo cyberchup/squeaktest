@@ -829,6 +829,46 @@ for that.
 **Revisit:** with the SIEM event (Phase 5), which should carry this outcome; or if decoding
 moves to a separate sandbox, which would report crashes its own way.
 
+## D30. Publish on one named address, loopback by default, and test `docker compose up` in CI (Phase 3)
+
+**Decision:** `compose.yaml` publishes port 8000 on the address in `SQUEAKTEST_LISTEN_ADDRESS`,
+or on `127.0.0.1` when that's unset, and passes `SQUEAKTEST_ALLOWED_HOSTS` into the container.
+On the homelab both name the server's LAN address, and the docs say not to use `0.0.0.0`. CI
+runs `docker compose up` on every push with the real model mounted: first on loopback, then on
+the runner's network address. Dylan asked for both on 2026-10-28 (item 3 of the threat model's
+list of fixes).
+
+**Why:**
+- **Loopback by default** keeps `docker compose up` safe on a laptop: nothing else on the
+  network can reach the decoder until someone chooses to publish it.
+- **One named address, not `0.0.0.0`.** Docker writes its own firewall rules for published
+  ports, ahead of `ufw`'s, so a port on `0.0.0.0` is open on every network the host is on
+  (a VPN, a guest network, another bridge), whatever the host firewall says. A named address
+  is the only place it can be reached.
+- **An address, not a "LAN mode" switch.** Compose can't work out which address is the LAN's;
+  the operator knows.
+- **The allowlist comes along.** Requests to the LAN address would otherwise get D28's 400.
+  Compose passes `SQUEAKTEST_ALLOWED_HOSTS` through, empty by default, which the app treats as
+  unset.
+- **Documented, not enforced.** Compose can't validate a variable, and the app inside the
+  container can't see which address Docker published it on, so nothing refuses `0.0.0.0`.
+- **CI uses the real model.** Without one, `serve` exits by design (`scripts/check_image.sh`
+  tests that), so a compose test without the model couldn't check the HTTP side, an analysis
+  or the restart. The 1.27 GB model is cached with a key on `model.py`, which pins it, so it's
+  downloaded again only when the pin changes or GitHub drops the cache (after 7 days unused).
+  The cache isn't trusted: the app checks the file's SHA-256 on every load.
+- **Killed from the host, not with `docker kill`.** Docker counts `docker kill` as stopping
+  the container by hand, so `unless-stopped` wouldn't restart it and the test would prove
+  nothing. A SIGKILL to the server's process is what the out-of-memory killer sends.
+
+**Impact:** no effect on detection quality. The homelab can run `compose.yaml` as it is, with a
+`.env` file. The container job takes longer, and downloads the model from Hugging Face on a
+cache miss.
+
+**Revisit:** behind a reverse proxy (T7, T8), squeaktest should go back to loopback and the
+proxy should take the LAN address. For IPv6, the address needs brackets (`[fd00::5]`), which
+hasn't been tried.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)

@@ -15,9 +15,8 @@ built.
 - One x86 Linux host on the home LAN runs the container with `compose.yaml`'s restrictions: UID
   1000, read-only root filesystem, `/tmp` in memory, no Linux capabilities, no privilege
   escalation, 2 CPUs, 6 GB of memory, 256 processes.
-- The port is published on the host's LAN address only. *Not yet possible:* `compose.yaml`
-  binds `127.0.0.1` today, so this needs a listen-address option (planned with the homelab
-  setup).
+- The port is published on the host's LAN address only: `SQUEAKTEST_LISTEN_ADDRESS` names it
+  (`compose.yaml` uses `127.0.0.1` when it's unset, D30).
 - No reverse proxy and no TLS: plain HTTP on the LAN. `SQUEAKTEST_PROXY_HOPS` stays 0 and
   `SQUEAKTEST_FRAME_ANCESTORS` stays `'none'`. `SQUEAKTEST_ALLOWED_HOSTS` lists the name or
   address the host is reached by.
@@ -310,9 +309,11 @@ behind a real proxy).
 There are no accounts. Anyone who can reach the port can upload files, which also means they
 can reach the decoder (T1).
 
-**Controls:** the port is published on the LAN address only (once that option exists). Each
-client gets one analysis at a time and 6 requests a minute, and the queue refuses more than 4
-waiting. Tested: `tests/test_api.py::test_clients_are_rate_limited`,
+**Controls:** the port is published on the LAN address only, the one `SQUEAKTEST_LISTEN_ADDRESS`
+names (D30). CI runs `docker compose up` on the runner's network address and checks that it
+answers there and not on `127.0.0.1` (`scripts/check_compose.sh`). Each client gets one
+analysis at a time and 6 requests a minute, and the queue refuses more than 4 waiting. Tested:
+`tests/test_api.py::test_clients_are_rate_limited`,
 `::test_a_client_gets_one_analysis_at_a_time`.
 
 **Watch for:** Docker's published ports go around host firewalls like `ufw`, so a port
@@ -354,9 +355,12 @@ The worst case is about 800 MB of uploads arriving (32 connections at 25 MB), 12
 **Controls:** if the container is killed for running out of memory, it comes back:
 `compose.yaml` and the README's `docker run` command both set `restart: unless-stopped`. A
 decoder killed by the kernel's out-of-memory killer is logged as `decoder_crashed` (T1).
+Tested: CI kills the server under `docker compose up` with SIGKILL from the host, as the
+out-of-memory killer would, and checks that it comes back (`scripts/check_compose.sh
+--restart`).
 
-**What's left:** the restart policy hasn't been seen working, since `docker compose up` itself
-is untested. Memory use under full load is estimated, not measured.
+**What's left:** memory use under full load is estimated, not measured. The `docker run`
+command's restart option is the same setting but isn't run in CI.
 
 ### T13. Uploads left on disk
 
@@ -431,8 +435,9 @@ In order of value for effort:
    internet site could reach the decoder.
 2. **Block the container's outbound traffic** at the host firewall (T1). Host configuration
    only; the app needs no network at runtime.
-3. **Add a LAN listen address to `compose.yaml`** (T9). Part of the homelab setup. The restart
-   policy and a log size cap were added on 2026-10-19 (T12, T6).
+3. ~~**Add a LAN listen address to `compose.yaml`** (T9).~~ Done on 2026-10-28 (D30), with
+   `docker compose up` itself now run in CI. The restart policy and a log size cap were added
+   on 2026-10-19 (T12, T6).
 4. **Scan the image and rebuild it on a schedule** (T1, T15). A CI job.
 5. **TLS through a reverse proxy before real recordings** (T7, T8). Homelab setup, then verify
    the proxy hop count.
@@ -440,17 +445,21 @@ In order of value for effort:
 
 ## What's verified and what isn't
 
-- **Tested on every push:** the controls cited with test names above (`uv run pytest`), and the
+- **Tested on every push:** the controls cited with test names above (`uv run pytest`), the
   image's own hardening (`scripts/check_image.sh`: UID 1000, read-only code and model, starts
-  with no capabilities on a read-only filesystem).
+  with no capabilities on a read-only filesystem), and `docker compose up` with the model
+  mounted (`scripts/check_compose.sh`). That last one checks that Docker applied every
+  `compose.yaml` restriction, including the restart policy and log cap. It also checks that
+  the app scores a clip, refuses another `Host`, comes back after a SIGKILL, and on a LAN
+  address answers there and not on `127.0.0.1`.
 - **Measured once:** the image with the model inside, running under `compose.yaml`'s
   restrictions: 2.84 GB peak memory, about 21 s per 60-second clip (D27).
 - **Unverified:**
-  - `docker compose up` itself, including its restart policy and log cap, and the README's
-    `docker run` command as a whole.
+  - The README's `docker run` command as a whole.
   - That a real decoder crash reaches the log as `decoder_crashed` inside the container. The
     tests simulate the crash's return code rather than crashing ffmpeg.
-  - The LAN listen address, which doesn't exist yet.
+  - The listen address on the homelab itself, and that the LAN's other devices can reach it.
+    CI checks it on a runner's network address.
   - What exploit code could reach as UID 1000 (T1).
   - How uvicorn handles slow headers (T11).
   - Memory use under full load (T12).

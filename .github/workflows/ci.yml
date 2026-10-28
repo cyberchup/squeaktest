@@ -37,12 +37,54 @@ jobs:
 
   container:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # WEIGHTS=mounted keeps the 1.27 GB model out of CI; the smoke test doesn't need it.
+      # WEIGHTS=mounted keeps the 1.27 GB model out of the image, as compose.yaml builds it.
       - name: Build the image
         run: docker build --build-arg WEIGHTS=mounted -t squeaktest:ci .
       - name: Smoke-test the image
         run: sh scripts/check_image.sh docker squeaktest:ci
+
+      # From here on, `docker compose up` as a user runs it, with the real model mounted.
+      - name: Choose a model folder
+        run: echo "SQUEAKTEST_DATA_DIR=$RUNNER_TEMP/squeaktest-data" >> "$GITHUB_ENV"
+      # The model is downloaded again only when model.py, which pins it, changes. A cached copy
+      # can't be swapped for another: the app checks its SHA-256 every time it loads it.
+      - name: Restore the model
+        id: model
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/squeaktest-data/models
+          key: model-${{ hashFiles('src/squeaktest/model.py') }}
+      # The image's own fetch-model, which checks the file's size and SHA-256. It runs as the
+      # runner's user so the files stay the runner's; the app only reads them.
+      - name: Download the model
+        if: steps.model.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$SQUEAKTEST_DATA_DIR/models"
+          docker run --rm --user "$(id -u):$(id -g)" -e HF_HUB_OFFLINE=0 \
+            -v "$SQUEAKTEST_DATA_DIR/models:/opt/squeaktest-data/models" \
+            squeaktest:ci squeaktest fetch-model --yes
+      - name: docker compose up
+        run: docker compose up -d --build --wait --wait-timeout 300
+      - name: Check it, and that it comes back after being killed
+        run: sh scripts/check_compose.sh --restart
+      # The listen-address option (T9): on the runner's own network address, and listed there.
+      - name: docker compose up on a LAN address
+        run: |
+          address="$(hostname -I | awk '{ print $1 }')"
+          echo "SQUEAKTEST_LISTEN_ADDRESS=$address" >> "$GITHUB_ENV"
+          echo "SQUEAKTEST_ALLOWED_HOSTS=$address" >> "$GITHUB_ENV"
+          SQUEAKTEST_LISTEN_ADDRESS="$address" SQUEAKTEST_ALLOWED_HOSTS="$address" \
+            docker compose up -d --wait --wait-timeout 300
+      - name: Check it on the LAN address
+        run: sh scripts/check_compose.sh
+      - name: Server log
+        if: always()
+        run: docker compose logs --no-color
+      - name: docker compose down
+        if: always()
+        run: docker compose down

@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Each compose.yaml setting, and the `docker run` flag that does the same thing.
 HARDENING = [
-    ('"127.0.0.1:8000:7860"', "-p 127.0.0.1:8000:7860"),
+    ('"${SQUEAKTEST_LISTEN_ADDRESS:-127.0.0.1}:8000:7860"', "-p 127.0.0.1:8000:7860"),
     ("read_only: true", "--read-only"),
     ("/tmp:size=256m,mode=1777", "--tmpfs /tmp:size=256m,mode=1777"),  # noqa: S108 - text, not a path
     ("cap_drop: [ALL]", "--cap-drop ALL"),
@@ -31,7 +31,9 @@ def test_readme_docker_run_keeps_the_hardening_in_compose():
     # container as compose.yaml does. A change to one without the other fails here.
     compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    (block,) = [b for b in re.findall(r"```bash\n(.*?)```", readme, re.S) if "docker run" in b]
+    # The block that starts the server; the README's other `docker run` only fetches the model.
+    blocks = re.findall(r"```bash\n(.*?)```", readme, re.S)
+    (block,) = [b for b in blocks if "docker run -d" in b]
     command = " ".join(block.replace("\\\n", " ").split())
     for setting, flag in HARDENING:
         assert setting in compose, setting

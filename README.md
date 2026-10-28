@@ -8,7 +8,7 @@
 
 ## Status
 
-Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app runs locally, and a hardened Docker image is built and checked in CI. There's no hosted demo for now ([D27](docs/decisions.md)); it's self-hosted, and the [threat model](docs/threat-model.md) covers running it on a home network.
+Early development. The command-line tool works (Phase 1), and its accuracy has been measured on data it was never trained or tuned on (Phase 2): see [Results](#results) and [Known gaps](#known-gaps). The web app runs locally, and a hardened Docker image is built, run with `docker compose up` and checked in CI. There's no hosted demo for now ([D27](docs/decisions.md)); it's self-hosted, and the [threat model](docs/threat-model.md) covers running it on a home network.
 
 The research behind the model and dataset choices is in [docs/research.md](docs/research.md). Every design choice, with its effect on missed fakes and false positives, is in [docs/decisions.md](docs/decisions.md). What the model is for, and what it isn't, is in the [model card](docs/model-card.md). What could go wrong with the web app, what stops it, and what's still open is in the [threat model](docs/threat-model.md).
 
@@ -77,6 +77,30 @@ first, and it's mounted read-only. The container runs as a non-root user with a 
 filesystem, no Linux capabilities, and CPU and memory limits ([D26](docs/decisions.md)). It
 restarts if it's killed, and its log is capped at 30 MB.
 
+On a home server, to reach it from the rest of the LAN, put the settings in a `.env` file next
+to `compose.yaml` (`.gitignore` keeps it out of git), with the server's own LAN address:
+
+```dotenv
+SQUEAKTEST_DATA_DIR=/srv/squeaktest-data
+SQUEAKTEST_LISTEN_ADDRESS=192.168.1.50
+SQUEAKTEST_ALLOWED_HOSTS=192.168.1.50,squeaktest.lan
+```
+
+Name the address rather than using `0.0.0.0`: Docker's published ports go around host firewalls
+such as `ufw`, so `0.0.0.0` would reach every network the server is on
+([D30](docs/decisions.md)). Without Python on the server, the image can download the model
+itself (1.27 GB, checked against its SHA-256):
+
+```bash
+docker compose build
+mkdir -p /srv/squeaktest-data/models
+docker run --rm --user "$(id -u):$(id -g)" -e HF_HUB_OFFLINE=0 \
+  -v /srv/squeaktest-data/models:/opt/squeaktest-data/models squeaktest:local squeaktest fetch-model --yes
+```
+
+Then `docker compose up -d --wait`, and `sh scripts/check_compose.sh` runs CI's checks against
+it (below).
+
 To build an image with the model inside, so nothing needs mounting, run this. Keep every flag:
 they're the same protections `compose.yaml` sets, and a plain `docker run` has none of them.
 
@@ -89,11 +113,14 @@ docker run -d --name squeaktest -p 127.0.0.1:8000:7860 \
   --log-opt max-size=10m --log-opt max-file=3 squeaktest
 ```
 
-*Not yet tested:* `docker compose up` itself, and the `docker run` command above as a whole (the
-latency workflow uses its hardening flags, but not the restart and log options). CI builds the
-image and checks its hardening on
-every push, and a workflow run by hand (`.github/workflows/latency.yml`) builds the image with
-the model inside and times it under `compose.yaml`'s limits.
+On every push, CI builds the image and checks its hardening (`scripts/check_image.sh`), then
+runs `docker compose up` with the model mounted (`scripts/check_compose.sh`). It checks that the
+running container has every protection above and scores a clip. It also checks that the app
+refuses other host names, comes back by itself after being killed, and on a LAN address answers
+there and nowhere else. A workflow run by hand (`.github/workflows/latency.yml`) builds the
+image with the model inside and times it under `compose.yaml`'s limits. *Not yet tested:* the
+`docker run` command above as a whole (the latency workflow uses its hardening flags, but not
+the restart and log options).
 
 ## Results
 
