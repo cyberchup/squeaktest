@@ -24,8 +24,10 @@ The result is a band (*Likely synthetic*, *Uncertain*, *Likely genuine*, or *Not
 there isn't enough sound), a score from 0 to 1, and a per-window timeline showing where the
 suspicious parts are. The score is the model's raw output, not a probability; the band is what
 to act on ([D16](docs/decisions.md), [D18](docs/decisions.md)). Opus files, common for voice
-notes, get a warning, because Opus is the model's weakest condition ([K2](#known-gaps)). Output
-never includes the file's name, so it is safe to log.
+notes, get a warning, because Opus is the model's weakest condition ([K2](#known-gaps)). Steady
+tones, such as beeps and dial, ringing or busy tones, are left out of scoring with a warning
+saying how much was skipped ([D31](docs/decisions.md)). Output never includes the file's name,
+so it is safe to log.
 
 Exit codes: `0` analysis finished, `1` input rejected, `2` setup problem (for example, the
 model hasn't been downloaded).
@@ -148,7 +150,7 @@ Measured weaknesses and untested areas. Details are in [docs/decisions.md](docs/
 
 - **Opus voice notes and VoIP audio** (K2): 8.6% of genuine Opus clips are rated *Likely synthetic*. squeaktest warns when the file is Opus, but not when the audio was Opus before being converted.
 - **Very short clips** (K3): 5.1% EER for clips under 2 seconds. Clips with under 1 second of sound aren't scored at all.
-- **Tones, beeps and music** (K1): non-speech audio can score as confidently synthetic. Not yet measured or fixed.
+- **Music and other non-speech sounds** (K1): the model gives non-speech arbitrary scores, and on short clips it can hide a fake. Synthetic hold music before a fake cut detection from 80% to 30% in testing. Steady tones (beeps, dial, ringing and busy tones) are now left out of scoring ([D31](docs/decisions.md)), which undid the same effect for them; music, fast key presses (DTMF) and noise are not filtered. The tone check occasionally takes a held vowel or a sung note for a tone: 4 of 26,953 test clips became *Not assessed* because of it. Measured on generated sounds only ([K1 report](eval/results/antideepfake-w2v-large/k1.md)).
 - **Recent real-world deepfakes:** probably much worse than the table above (see *Read this as a best case*).
 - **Languages other than English:** untested.
 - **Untested:** partial fakes (a cloned sentence spliced into a real call), real phone networks (the codecs above are simulated), and deliberate evasion.

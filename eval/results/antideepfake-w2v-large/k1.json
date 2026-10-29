@@ -1,0 +1,5122 @@
+{
+  "model": "antideepfake-w2v-large",
+  "generated": "2026-10-29T17:29:58+00:00",
+  "dev": {
+    "synthetic": {
+      "tone_1000hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "tone_440hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "beeps_1000hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "dial_us": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "ringback_us": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 3,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "busy_us": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "reorder_us": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "likely_genuine": 4,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "sit_low": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "dtmf_fast": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "not_assessed": 4,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 1,
+              "not_assessed": 4,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "dtmf_slow": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "fax_cng": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "sweep": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 3,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 3,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "noise_white": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 5,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "noise_pink": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 5,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "hum_60hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 3,
+              "uncertain": 2,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 1,
+              "not_assessed": 4,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "music_pop_piano": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 5,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "music_minor_organ": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 5,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        }
+      }
+    },
+    "mixed": {
+      "original": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 107,
+              "not_assessed": 9,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 107,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 72,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 72,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 6,
+              "uncertain": 16,
+              "likely_genuine": 298,
+              "not_assessed": 28,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 6,
+              "uncertain": 16,
+              "likely_genuine": 298,
+              "not_assessed": 28,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 210,
+              "uncertain": 4,
+              "likely_genuine": 5,
+              "not_assessed": 33,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 210,
+              "uncertain": 4,
+              "likely_genuine": 5,
+              "not_assessed": 33,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 105,
+              "not_assessed": 9,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 105,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 68,
+              "uncertain": 2,
+              "likely_genuine": 2,
+              "not_assessed": 12,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 68,
+              "uncertain": 2,
+              "likely_genuine": 2,
+              "not_assessed": 12,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 6,
+              "uncertain": 14,
+              "likely_genuine": 86,
+              "not_assessed": 10,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 6,
+              "uncertain": 14,
+              "likely_genuine": 86,
+              "not_assessed": 10,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 70,
+              "uncertain": 2,
+              "likely_genuine": 1,
+              "not_assessed": 11,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 70,
+              "uncertain": 2,
+              "likely_genuine": 1,
+              "not_assessed": 11,
+              "n": 84
+            }
+          }
+        }
+      },
+      "beep_before": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 114,
+              "not_assessed": 2,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 107,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 74,
+              "uncertain": 7,
+              "likely_genuine": 1,
+              "not_assessed": 2,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 72,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 4,
+              "uncertain": 9,
+              "likely_genuine": 329,
+              "not_assessed": 6,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 2,
+              "uncertain": 12,
+              "likely_genuine": 306,
+              "not_assessed": 28,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 222,
+              "uncertain": 17,
+              "likely_genuine": 7,
+              "not_assessed": 6,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 210,
+              "uncertain": 4,
+              "likely_genuine": 5,
+              "not_assessed": 33,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 114,
+              "not_assessed": 2,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 105,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 73,
+              "uncertain": 5,
+              "likely_genuine": 4,
+              "not_assessed": 2,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 68,
+              "uncertain": 2,
+              "likely_genuine": 2,
+              "not_assessed": 12,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 4,
+              "uncertain": 9,
+              "likely_genuine": 101,
+              "not_assessed": 2,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 2,
+              "uncertain": 10,
+              "likely_genuine": 94,
+              "not_assessed": 10,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 75,
+              "uncertain": 5,
+              "likely_genuine": 2,
+              "not_assessed": 2,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 70,
+              "uncertain": 2,
+              "likely_genuine": 1,
+              "not_assessed": 11,
+              "n": 84
+            }
+          }
+        }
+      },
+      "ringback_before": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 116,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 107,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 35,
+              "uncertain": 40,
+              "likely_genuine": 9,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 72,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 1,
+              "uncertain": 104,
+              "likely_genuine": 243,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 9,
+              "uncertain": 27,
+              "likely_genuine": 285,
+              "not_assessed": 27,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 110,
+              "uncertain": 126,
+              "likely_genuine": 16,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 212,
+              "uncertain": 4,
+              "likely_genuine": 4,
+              "not_assessed": 32,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 116,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 105,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 36,
+              "uncertain": 41,
+              "likely_genuine": 7,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 68,
+              "uncertain": 2,
+              "likely_genuine": 2,
+              "not_assessed": 12,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 1,
+              "uncertain": 104,
+              "likely_genuine": 11,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 9,
+              "uncertain": 25,
+              "likely_genuine": 73,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 39,
+              "uncertain": 45,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 72,
+              "uncertain": 2,
+              "not_assessed": 10,
+              "n": 84
+            }
+          }
+        }
+      },
+      "dtmf_before": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "uncertain": 1,
+              "likely_genuine": 102,
+              "not_assessed": 13,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 1,
+              "likely_genuine": 102,
+              "not_assessed": 13,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 64,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 17,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 64,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 17,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "uncertain": 24,
+              "likely_genuine": 297,
+              "not_assessed": 27,
+              "n": 348
+            },
+            "on": {
+              "uncertain": 24,
+              "likely_genuine": 297,
+              "not_assessed": 27,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 149,
+              "uncertain": 63,
+              "likely_genuine": 4,
+              "not_assessed": 36,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 149,
+              "uncertain": 63,
+              "likely_genuine": 4,
+              "not_assessed": 36,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 102,
+              "not_assessed": 14,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 102,
+              "not_assessed": 14,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 61,
+              "uncertain": 3,
+              "likely_genuine": 1,
+              "not_assessed": 19,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 61,
+              "uncertain": 3,
+              "likely_genuine": 1,
+              "not_assessed": 19,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "uncertain": 23,
+              "likely_genuine": 93,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 23,
+              "likely_genuine": 93,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 24,
+              "uncertain": 59,
+              "likely_genuine": 1,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 24,
+              "uncertain": 59,
+              "likely_genuine": 1,
+              "n": 84
+            }
+          }
+        }
+      },
+      "busy_after": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 116,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 1,
+              "likely_genuine": 106,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 23,
+              "uncertain": 22,
+              "likely_genuine": 39,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 72,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "uncertain": 21,
+              "likely_genuine": 327,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 8,
+              "uncertain": 24,
+              "likely_genuine": 288,
+              "not_assessed": 28,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 69,
+              "uncertain": 89,
+              "likely_genuine": 94,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 210,
+              "uncertain": 4,
+              "likely_genuine": 5,
+              "not_assessed": 33,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 116,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 105,
+              "not_assessed": 9,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 21,
+              "uncertain": 23,
+              "likely_genuine": 40,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 68,
+              "uncertain": 2,
+              "likely_genuine": 2,
+              "not_assessed": 12,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "uncertain": 21,
+              "likely_genuine": 95,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 8,
+              "uncertain": 21,
+              "likely_genuine": 77,
+              "not_assessed": 10,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 25,
+              "uncertain": 44,
+              "likely_genuine": 15,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 70,
+              "uncertain": 2,
+              "likely_genuine": 1,
+              "not_assessed": 11,
+              "n": 84
+            }
+          }
+        }
+      },
+      "music_before": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 116,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 116,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 33,
+              "uncertain": 33,
+              "likely_genuine": 18,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 33,
+              "uncertain": 33,
+              "likely_genuine": 18,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 346,
+              "n": 348
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 346,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 100,
+              "uncertain": 95,
+              "likely_genuine": 57,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 100,
+              "uncertain": 95,
+              "likely_genuine": 57,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 116,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 116,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 32,
+              "uncertain": 33,
+              "likely_genuine": 19,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 32,
+              "uncertain": 33,
+              "likely_genuine": 19,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 114,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 114,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 35,
+              "uncertain": 29,
+              "likely_genuine": 20,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 35,
+              "uncertain": 29,
+              "likely_genuine": 20,
+              "n": 84
+            }
+          }
+        }
+      },
+      "tone_under": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 111,
+              "not_assessed": 5,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 108,
+              "not_assessed": 8,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 71,
+              "uncertain": 4,
+              "likely_genuine": 3,
+              "not_assessed": 6,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 69,
+              "uncertain": 6,
+              "likely_genuine": 2,
+              "not_assessed": 7,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 10,
+              "uncertain": 14,
+              "likely_genuine": 308,
+              "not_assessed": 16,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 10,
+              "uncertain": 13,
+              "likely_genuine": 302,
+              "not_assessed": 23,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 209,
+              "uncertain": 14,
+              "likely_genuine": 7,
+              "not_assessed": 22,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 207,
+              "uncertain": 14,
+              "likely_genuine": 5,
+              "not_assessed": 26,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 111,
+              "not_assessed": 5,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 108,
+              "not_assessed": 8,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 64,
+              "uncertain": 10,
+              "likely_genuine": 3,
+              "not_assessed": 7,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 65,
+              "uncertain": 8,
+              "likely_genuine": 2,
+              "not_assessed": 9,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 10,
+              "uncertain": 14,
+              "likely_genuine": 86,
+              "not_assessed": 6,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 10,
+              "uncertain": 13,
+              "likely_genuine": 86,
+              "not_assessed": 7,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 74,
+              "likely_genuine": 1,
+              "not_assessed": 9,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 73,
+              "likely_genuine": 1,
+              "not_assessed": 10,
+              "n": 84
+            }
+          }
+        }
+      },
+      "hum_under": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "likely_genuine": 112,
+              "not_assessed": 4,
+              "n": 116
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 5,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 70,
+              "uncertain": 5,
+              "likely_genuine": 2,
+              "not_assessed": 7,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 70,
+              "uncertain": 5,
+              "likely_genuine": 2,
+              "not_assessed": 7,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 9,
+              "uncertain": 19,
+              "likely_genuine": 307,
+              "not_assessed": 13,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 8,
+              "uncertain": 19,
+              "likely_genuine": 304,
+              "not_assessed": 17,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 205,
+              "uncertain": 18,
+              "likely_genuine": 5,
+              "not_assessed": 24,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 205,
+              "uncertain": 18,
+              "likely_genuine": 5,
+              "not_assessed": 24,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "uncertain": 3,
+              "likely_genuine": 109,
+              "not_assessed": 4,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 3,
+              "likely_genuine": 108,
+              "not_assessed": 5,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 65,
+              "uncertain": 8,
+              "likely_genuine": 3,
+              "not_assessed": 8,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 65,
+              "uncertain": 8,
+              "likely_genuine": 3,
+              "not_assessed": 8,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 9,
+              "uncertain": 16,
+              "likely_genuine": 86,
+              "not_assessed": 5,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 8,
+              "uncertain": 16,
+              "likely_genuine": 85,
+              "not_assessed": 7,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 70,
+              "uncertain": 5,
+              "not_assessed": 9,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 70,
+              "uncertain": 5,
+              "not_assessed": 9,
+              "n": 84
+            }
+          }
+        }
+      },
+      "music_under": {
+        "clean": {
+          "genuine": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 111,
+              "not_assessed": 3,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 111,
+              "not_assessed": 3,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 45,
+              "uncertain": 23,
+              "likely_genuine": 13,
+              "not_assessed": 3,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 45,
+              "uncertain": 23,
+              "likely_genuine": 13,
+              "not_assessed": 3,
+              "n": 84
+            }
+          }
+        },
+        "all": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 9,
+              "uncertain": 29,
+              "likely_genuine": 300,
+              "not_assessed": 10,
+              "n": 348
+            },
+            "on": {
+              "likely_synthetic": 9,
+              "uncertain": 29,
+              "likely_genuine": 300,
+              "not_assessed": 10,
+              "n": 348
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 137,
+              "uncertain": 58,
+              "likely_genuine": 48,
+              "not_assessed": 9,
+              "n": 252
+            },
+            "on": {
+              "likely_synthetic": 137,
+              "uncertain": 58,
+              "likely_genuine": 48,
+              "not_assessed": 9,
+              "n": 252
+            }
+          }
+        },
+        "g711": {
+          "genuine": {
+            "off": {
+              "uncertain": 1,
+              "likely_genuine": 112,
+              "not_assessed": 3,
+              "n": 116
+            },
+            "on": {
+              "uncertain": 1,
+              "likely_genuine": 112,
+              "not_assessed": 3,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 29,
+              "uncertain": 21,
+              "likely_genuine": 31,
+              "not_assessed": 3,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 29,
+              "uncertain": 21,
+              "likely_genuine": 31,
+              "not_assessed": 3,
+              "n": 84
+            }
+          }
+        },
+        "opus": {
+          "genuine": {
+            "off": {
+              "likely_synthetic": 9,
+              "uncertain": 26,
+              "likely_genuine": 77,
+              "not_assessed": 4,
+              "n": 116
+            },
+            "on": {
+              "likely_synthetic": 9,
+              "uncertain": 26,
+              "likely_genuine": 77,
+              "not_assessed": 4,
+              "n": 116
+            }
+          },
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 63,
+              "uncertain": 14,
+              "likely_genuine": 4,
+              "not_assessed": 3,
+              "n": 84
+            },
+            "on": {
+              "likely_synthetic": 63,
+              "uncertain": 14,
+              "likely_genuine": 4,
+              "not_assessed": 3,
+              "n": 84
+            }
+          }
+        }
+      }
+    },
+    "speech": {
+      "clean": {
+        "off": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 287,
+            "synthetic": 186
+          },
+          "eer": 0.009274413529732684,
+          "tpr_at_1pct_fpr": 0.9912711402073104,
+          "genuine_likely_synthetic": 0.0007936507936507937,
+          "synthetic_likely_synthetic": 0.972176759410802
+        },
+        "on": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 287,
+            "synthetic": 186
+          },
+          "eer": 0.009274413529732684,
+          "tpr_at_1pct_fpr": 0.9912711402073104,
+          "genuine_likely_synthetic": 0.0007936507936507937,
+          "synthetic_likely_synthetic": 0.972176759410802
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00013481538833979382,
+          "clips_with_any_removed": 8,
+          "clips_rescored": 0,
+          "largest_removed_s": 0.371
+        }
+      },
+      "g711": {
+        "off": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 293,
+            "synthetic": 194
+          },
+          "eer": 0.01589041095890409,
+          "tpr_at_1pct_fpr": 0.9775342465753425,
+          "genuine_likely_synthetic": 0.0011933174224343676,
+          "synthetic_likely_synthetic": 0.9358904109589041
+        },
+        "on": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 293,
+            "synthetic": 194
+          },
+          "eer": 0.01589041095890409,
+          "tpr_at_1pct_fpr": 0.9775342465753425,
+          "genuine_likely_synthetic": 0.0011933174224343676,
+          "synthetic_likely_synthetic": 0.9358904109589041
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00017168386087728737,
+          "clips_with_any_removed": 10,
+          "clips_rescored": 0,
+          "largest_removed_s": 0.371
+        }
+      },
+      "amr-nb": {
+        "off": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 313,
+            "synthetic": 199
+          },
+          "eer": 0.044105854049719326,
+          "tpr_at_1pct_fpr": 0.8373626373626374,
+          "genuine_likely_synthetic": 0.014033680834001604,
+          "synthetic_likely_synthetic": 0.8681318681318682
+        },
+        "on": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 313,
+            "synthetic": 199
+          },
+          "eer": 0.044105854049719326,
+          "tpr_at_1pct_fpr": 0.8373626373626374,
+          "genuine_likely_synthetic": 0.014033680834001604,
+          "synthetic_likely_synthetic": 0.8681318681318682
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00023427733103833232,
+          "clips_with_any_removed": 13,
+          "clips_rescored": 0,
+          "largest_removed_s": 0.36
+        }
+      },
+      "opus": {
+        "off": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 300,
+            "synthetic": 196
+          },
+          "eer": 0.035899481451934584,
+          "tpr_at_1pct_fpr": 0.8996160175534833,
+          "genuine_likely_synthetic": 0.033506182688472275,
+          "synthetic_likely_synthetic": 0.9616017553483269
+        },
+        "on": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 300,
+            "synthetic": 196
+          },
+          "eer": 0.035899481451934584,
+          "tpr_at_1pct_fpr": 0.8996160175534833,
+          "genuine_likely_synthetic": 0.033506182688472275,
+          "synthetic_likely_synthetic": 0.9616017553483269
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00017871955188349236,
+          "clips_with_any_removed": 10,
+          "clips_rescored": 0,
+          "largest_removed_s": 0.37
+        }
+      },
+      "mp3": {
+        "off": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 290,
+            "synthetic": 190
+          },
+          "eer": 0.015494636471990465,
+          "tpr_at_1pct_fpr": 0.9759431383269547,
+          "genuine_likely_synthetic": 0.0003972983710766786,
+          "synthetic_likely_synthetic": 0.9207217058501913
+        },
+        "on": {
+          "clips": 4826,
+          "not_assessed": {
+            "genuine": 290,
+            "synthetic": 190
+          },
+          "eer": 0.015494636471990465,
+          "tpr_at_1pct_fpr": 0.9759431383269547,
+          "genuine_likely_synthetic": 0.0003972983710766786,
+          "synthetic_likely_synthetic": 0.9207217058501913
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00011674450899297729,
+          "clips_with_any_removed": 7,
+          "clips_rescored": 0,
+          "largest_removed_s": 0.371
+        }
+      }
+    }
+  },
+  "test": {
+    "synthetic": {
+      "tone_1400hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "likely_genuine": 4,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "tone_600hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "beeps_850hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "dial_uk": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "ringback_uk": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "busy_eu": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 2,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "reorder_uk": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "sit_high": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "dtmf_fast": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "dtmf_slow": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 5,
+              "n": 5
+            },
+            "on": {
+              "not_assessed": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "not_assessed": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "fax_ced": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 5,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 1,
+              "not_assessed": 4,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "sweep": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 5,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "noise_white": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 5,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "noise_pink": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "n": 5
+            },
+            "on": {
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "uncertain": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "hum_50hz": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "uncertain": 4,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_synthetic": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "uncertain": 1,
+              "n": 1
+            },
+            "on": {
+              "not_assessed": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "music_pop_bell": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 5,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        }
+      },
+      "music_minor_strings": {
+        "clean": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "all": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 5,
+              "n": 5
+            },
+            "on": {
+              "likely_genuine": 5,
+              "n": 5
+            }
+          }
+        },
+        "g711": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "amr-nb": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "opus": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        },
+        "mp3": {
+          "non-speech": {
+            "off": {
+              "likely_genuine": 1,
+              "n": 1
+            },
+            "on": {
+              "likely_genuine": 1,
+              "n": 1
+            }
+          }
+        }
+      }
+    },
+    "mixed": {
+      "original": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 60,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 60,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 176,
+              "uncertain": 8,
+              "likely_genuine": 5,
+              "not_assessed": 30,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 176,
+              "uncertain": 8,
+              "likely_genuine": 5,
+              "not_assessed": 30,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 4,
+              "uncertain": 10,
+              "likely_genuine": 317,
+              "not_assessed": 50,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 4,
+              "uncertain": 10,
+              "likely_genuine": 317,
+              "not_assessed": 50,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 58,
+              "uncertain": 3,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 3,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 58,
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "not_assessed": 10,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 4,
+              "uncertain": 10,
+              "likely_genuine": 95,
+              "not_assessed": 18,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 4,
+              "uncertain": 10,
+              "likely_genuine": 95,
+              "not_assessed": 18,
+              "n": 127
+            }
+          }
+        }
+      },
+      "beep_before": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 60,
+              "uncertain": 6,
+              "likely_genuine": 6,
+              "not_assessed": 1,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 60,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 123,
+              "not_assessed": 4,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 171,
+              "uncertain": 28,
+              "likely_genuine": 15,
+              "not_assessed": 5,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 177,
+              "uncertain": 7,
+              "likely_genuine": 5,
+              "not_assessed": 30,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 4,
+              "uncertain": 13,
+              "likely_genuine": 352,
+              "not_assessed": 12,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 2,
+              "uncertain": 12,
+              "likely_genuine": 317,
+              "not_assessed": 50,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 53,
+              "uncertain": 12,
+              "likely_genuine": 6,
+              "not_assessed": 2,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 3,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 123,
+              "not_assessed": 4,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 58,
+              "uncertain": 10,
+              "likely_genuine": 3,
+              "not_assessed": 2,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 59,
+              "uncertain": 3,
+              "likely_genuine": 1,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 4,
+              "uncertain": 13,
+              "likely_genuine": 106,
+              "not_assessed": 4,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 2,
+              "uncertain": 12,
+              "likely_genuine": 95,
+              "not_assessed": 18,
+              "n": 127
+            }
+          }
+        }
+      },
+      "ringback_before": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 50,
+              "uncertain": 2,
+              "likely_genuine": 1,
+              "not_assessed": 20,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 60,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 80,
+              "not_assessed": 47,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 148,
+              "uncertain": 8,
+              "likely_genuine": 1,
+              "not_assessed": 62,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 176,
+              "uncertain": 8,
+              "likely_genuine": 5,
+              "not_assessed": 30,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 1,
+              "uncertain": 18,
+              "likely_genuine": 220,
+              "not_assessed": 142,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 1,
+              "uncertain": 15,
+              "likely_genuine": 315,
+              "not_assessed": 50,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 46,
+              "uncertain": 5,
+              "not_assessed": 22,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 3,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 78,
+              "not_assessed": 49,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 52,
+              "uncertain": 1,
+              "not_assessed": 20,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 1,
+              "uncertain": 18,
+              "likely_genuine": 62,
+              "not_assessed": 46,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 1,
+              "uncertain": 15,
+              "likely_genuine": 93,
+              "not_assessed": 18,
+              "n": 127
+            }
+          }
+        }
+      },
+      "dtmf_before": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 49,
+              "uncertain": 9,
+              "likely_genuine": 4,
+              "not_assessed": 11,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 49,
+              "uncertain": 9,
+              "likely_genuine": 4,
+              "not_assessed": 11,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 97,
+              "not_assessed": 30,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 97,
+              "not_assessed": 30,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 122,
+              "uncertain": 56,
+              "likely_genuine": 18,
+              "not_assessed": 23,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 122,
+              "uncertain": 56,
+              "likely_genuine": 18,
+              "not_assessed": 23,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 14,
+              "likely_genuine": 307,
+              "not_assessed": 60,
+              "n": 381
+            },
+            "on": {
+              "uncertain": 14,
+              "likely_genuine": 307,
+              "not_assessed": 60,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 46,
+              "uncertain": 14,
+              "likely_genuine": 1,
+              "not_assessed": 12,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 46,
+              "uncertain": 14,
+              "likely_genuine": 1,
+              "not_assessed": 12,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 97,
+              "not_assessed": 30,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 97,
+              "not_assessed": 30,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 27,
+              "uncertain": 33,
+              "likely_genuine": 13,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 27,
+              "uncertain": 33,
+              "likely_genuine": 13,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 14,
+              "likely_genuine": 113,
+              "n": 127
+            },
+            "on": {
+              "uncertain": 14,
+              "likely_genuine": 113,
+              "n": 127
+            }
+          }
+        }
+      },
+      "busy_after": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 18,
+              "uncertain": 51,
+              "likely_genuine": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 60,
+              "uncertain": 1,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 19,
+              "likely_genuine": 108,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 62,
+              "uncertain": 147,
+              "likely_genuine": 10,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 176,
+              "uncertain": 8,
+              "likely_genuine": 5,
+              "not_assessed": 30,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 3,
+              "uncertain": 119,
+              "likely_genuine": 259,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 5,
+              "uncertain": 11,
+              "likely_genuine": 315,
+              "not_assessed": 50,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 20,
+              "uncertain": 47,
+              "likely_genuine": 6,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 3,
+              "likely_genuine": 2,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 20,
+              "likely_genuine": 107,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 111,
+              "not_assessed": 16,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 24,
+              "uncertain": 49,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 58,
+              "uncertain": 4,
+              "likely_genuine": 1,
+              "not_assessed": 10,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 3,
+              "uncertain": 80,
+              "likely_genuine": 44,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 5,
+              "uncertain": 11,
+              "likely_genuine": 93,
+              "not_assessed": 18,
+              "n": 127
+            }
+          }
+        }
+      },
+      "music_before": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 22,
+              "uncertain": 23,
+              "likely_genuine": 28,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 22,
+              "uncertain": 23,
+              "likely_genuine": 28,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 127,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 127,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 65,
+              "uncertain": 73,
+              "likely_genuine": 81,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 65,
+              "uncertain": 73,
+              "likely_genuine": 81,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 9,
+              "likely_genuine": 372,
+              "n": 381
+            },
+            "on": {
+              "uncertain": 9,
+              "likely_genuine": 372,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 21,
+              "uncertain": 25,
+              "likely_genuine": 27,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 21,
+              "uncertain": 25,
+              "likely_genuine": 27,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 127,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 127,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 22,
+              "uncertain": 25,
+              "likely_genuine": 26,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 22,
+              "uncertain": 25,
+              "likely_genuine": 26,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 9,
+              "likely_genuine": 118,
+              "n": 127
+            },
+            "on": {
+              "uncertain": 9,
+              "likely_genuine": 118,
+              "n": 127
+            }
+          }
+        }
+      },
+      "tone_under": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 50,
+              "uncertain": 12,
+              "likely_genuine": 7,
+              "not_assessed": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 50,
+              "uncertain": 10,
+              "likely_genuine": 7,
+              "not_assessed": 6,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 3,
+              "likely_genuine": 118,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "uncertain": 3,
+              "likely_genuine": 113,
+              "not_assessed": 11,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 165,
+              "uncertain": 26,
+              "likely_genuine": 16,
+              "not_assessed": 12,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 159,
+              "uncertain": 25,
+              "likely_genuine": 17,
+              "not_assessed": 18,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 6,
+              "uncertain": 38,
+              "likely_genuine": 318,
+              "not_assessed": 19,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 5,
+              "uncertain": 37,
+              "likely_genuine": 309,
+              "not_assessed": 30,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 50,
+              "uncertain": 11,
+              "likely_genuine": 8,
+              "not_assessed": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 49,
+              "uncertain": 9,
+              "likely_genuine": 9,
+              "not_assessed": 6,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 1,
+              "likely_genuine": 120,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "uncertain": 1,
+              "likely_genuine": 115,
+              "not_assessed": 11,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 65,
+              "uncertain": 3,
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 60,
+              "uncertain": 6,
+              "likely_genuine": 1,
+              "not_assessed": 6,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 6,
+              "uncertain": 34,
+              "likely_genuine": 80,
+              "not_assessed": 7,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 5,
+              "uncertain": 33,
+              "likely_genuine": 81,
+              "not_assessed": 8,
+              "n": 127
+            }
+          }
+        }
+      },
+      "hum_under": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 60,
+              "uncertain": 9,
+              "not_assessed": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 59,
+              "uncertain": 9,
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 1,
+              "likely_genuine": 120,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "uncertain": 1,
+              "likely_genuine": 120,
+              "not_assessed": 6,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 182,
+              "uncertain": 23,
+              "likely_genuine": 2,
+              "not_assessed": 12,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 180,
+              "uncertain": 24,
+              "likely_genuine": 3,
+              "not_assessed": 12,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 8,
+              "uncertain": 32,
+              "likely_genuine": 321,
+              "not_assessed": 20,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 8,
+              "uncertain": 32,
+              "likely_genuine": 321,
+              "not_assessed": 20,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 60,
+              "uncertain": 8,
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 60,
+              "uncertain": 8,
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "uncertain": 2,
+              "likely_genuine": 119,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "uncertain": 2,
+              "likely_genuine": 119,
+              "not_assessed": 6,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 62,
+              "uncertain": 6,
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 61,
+              "uncertain": 7,
+              "likely_genuine": 1,
+              "not_assessed": 4,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 8,
+              "uncertain": 29,
+              "likely_genuine": 82,
+              "not_assessed": 8,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 8,
+              "uncertain": 29,
+              "likely_genuine": 82,
+              "not_assessed": 8,
+              "n": 127
+            }
+          }
+        }
+      },
+      "music_under": {
+        "clean": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 32,
+              "uncertain": 13,
+              "likely_genuine": 26,
+              "not_assessed": 2,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 32,
+              "uncertain": 13,
+              "likely_genuine": 26,
+              "not_assessed": 2,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 121,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 121,
+              "not_assessed": 6,
+              "n": 127
+            }
+          }
+        },
+        "all": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 101,
+              "uncertain": 51,
+              "likely_genuine": 60,
+              "not_assessed": 7,
+              "n": 219
+            },
+            "on": {
+              "likely_synthetic": 101,
+              "uncertain": 51,
+              "likely_genuine": 60,
+              "not_assessed": 7,
+              "n": 219
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 7,
+              "uncertain": 37,
+              "likely_genuine": 319,
+              "not_assessed": 18,
+              "n": 381
+            },
+            "on": {
+              "likely_synthetic": 7,
+              "uncertain": 37,
+              "likely_genuine": 319,
+              "not_assessed": 18,
+              "n": 381
+            }
+          }
+        },
+        "g711": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 24,
+              "uncertain": 17,
+              "likely_genuine": 30,
+              "not_assessed": 2,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 24,
+              "uncertain": 17,
+              "likely_genuine": 30,
+              "not_assessed": 2,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_genuine": 121,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "likely_genuine": 121,
+              "not_assessed": 6,
+              "n": 127
+            }
+          }
+        },
+        "opus": {
+          "synthetic": {
+            "off": {
+              "likely_synthetic": 45,
+              "uncertain": 21,
+              "likely_genuine": 4,
+              "not_assessed": 3,
+              "n": 73
+            },
+            "on": {
+              "likely_synthetic": 45,
+              "uncertain": 21,
+              "likely_genuine": 4,
+              "not_assessed": 3,
+              "n": 73
+            }
+          },
+          "genuine": {
+            "off": {
+              "likely_synthetic": 7,
+              "uncertain": 37,
+              "likely_genuine": 77,
+              "not_assessed": 6,
+              "n": 127
+            },
+            "on": {
+              "likely_synthetic": 7,
+              "uncertain": 37,
+              "likely_genuine": 77,
+              "not_assessed": 6,
+              "n": 127
+            }
+          }
+        }
+      }
+    },
+    "speech": {
+      "clean": {
+        "off": {
+          "clips": 26953,
+          "not_assessed": {
+            "genuine": 2752,
+            "synthetic": 1103
+          },
+          "eer": 0.01345755693581785,
+          "tpr_at_1pct_fpr": 0.9826317000230044,
+          "genuine_likely_synthetic": 0.0006942515967786726,
+          "synthetic_likely_synthetic": 0.9421440073613987
+        },
+        "on": {
+          "clips": 26953,
+          "not_assessed": {
+            "genuine": 2755,
+            "synthetic": 1104
+          },
+          "eer": 0.013459105027033291,
+          "tpr_at_1pct_fpr": 0.982629702059128,
+          "genuine_likely_synthetic": 0.0006943962224845497,
+          "synthetic_likely_synthetic": 0.9421373518923272
+        },
+        "tones": {
+          "share_of_activity_removed": 0.0004336073586171116,
+          "clips_with_any_removed": 126,
+          "clips_rescored": 15,
+          "largest_removed_s": 2.194
+        }
+      },
+      "g711": {
+        "off": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 319,
+            "synthetic": 146
+          },
+          "eer": 0.02262727844123193,
+          "tpr_at_1pct_fpr": 0.9608050847457628,
+          "genuine_likely_synthetic": 0.0006285355122564425,
+          "synthetic_likely_synthetic": 0.9036016949152542
+        },
+        "on": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 319,
+            "synthetic": 146
+          },
+          "eer": 0.02262727844123193,
+          "tpr_at_1pct_fpr": 0.9608050847457628,
+          "genuine_likely_synthetic": 0.0006285355122564425,
+          "synthetic_likely_synthetic": 0.9036016949152542
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00046730187978271564,
+          "clips_with_any_removed": 10,
+          "clips_rescored": 0,
+          "largest_removed_s": 2.194
+        }
+      },
+      "amr-nb": {
+        "off": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 349,
+            "synthetic": 155
+          },
+          "eer": 0.04278074866310155,
+          "tpr_at_1pct_fpr": 0.9026737967914439,
+          "genuine_likely_synthetic": 0.0032030749519538757,
+          "synthetic_likely_synthetic": 0.8673796791443851
+        },
+        "on": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 349,
+            "synthetic": 155
+          },
+          "eer": 0.04278074866310155,
+          "tpr_at_1pct_fpr": 0.9026737967914439,
+          "genuine_likely_synthetic": 0.0032030749519538757,
+          "synthetic_likely_synthetic": 0.8673796791443851
+        },
+        "tones": {
+          "share_of_activity_removed": 0.0004496234574200784,
+          "clips_with_any_removed": 8,
+          "clips_rescored": 0,
+          "largest_removed_s": 1.833
+        }
+      },
+      "opus": {
+        "off": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 331,
+            "synthetic": 143
+          },
+          "eer": 0.060797973400886635,
+          "tpr_at_1pct_fpr": 0.737064413938754,
+          "genuine_likely_synthetic": 0.08613046231792273,
+          "synthetic_likely_synthetic": 0.9567053854276664
+        },
+        "on": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 331,
+            "synthetic": 143
+          },
+          "eer": 0.060797973400886635,
+          "tpr_at_1pct_fpr": 0.737064413938754,
+          "genuine_likely_synthetic": 0.08613046231792273,
+          "synthetic_likely_synthetic": 0.9567053854276664
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00030376250536551946,
+          "clips_with_any_removed": 9,
+          "clips_rescored": 0,
+          "largest_removed_s": 0.932
+        }
+      },
+      "mp3": {
+        "off": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 306,
+            "synthetic": 136
+          },
+          "eer": 0.022012578616352196,
+          "tpr_at_1pct_fpr": 0.9591194968553459,
+          "genuine_likely_synthetic": 0.0006234413965087282,
+          "synthetic_likely_synthetic": 0.8983228511530398
+        },
+        "on": {
+          "clips": 3000,
+          "not_assessed": {
+            "genuine": 306,
+            "synthetic": 136
+          },
+          "eer": 0.022012578616352196,
+          "tpr_at_1pct_fpr": 0.9591194968553459,
+          "genuine_likely_synthetic": 0.0006234413965087282,
+          "synthetic_likely_synthetic": 0.8983228511530398
+        },
+        "tones": {
+          "share_of_activity_removed": 0.00044986570519449484,
+          "clips_with_any_removed": 10,
+          "clips_rescored": 0,
+          "largest_removed_s": 2.184
+        }
+      }
+    }
+  }
+}

@@ -18,7 +18,7 @@ speakers for reported numbers (see `eval/results/`).
 | D9 | Calibration | Done: not calibrated (D16) |
 | D10 | Per-window versus whole-clip normalization | Not done; carried forward |
 | D14 | Data-driven bands | Done: replaced by D18 |
-| K1 | Tones and music | Not measured; still open |
+| K1 | Tones and music | Measured after Phase 2; tones fixed by D31, music open |
 
 ## D1. Energy-based voice activity detection at -45 dBFS (step 3, `vad.py`)
 
@@ -869,6 +869,90 @@ cache miss.
 proxy should take the LAN address. For IPv6, the address needs brackets (`[fd00::5]`), which
 hasn't been tried.
 
+## D31. Leave steady tones out of scoring with a tone gate in the VAD (K1)
+
+**Decision:** before windowing, squeaktest looks for steady tones. A 25 ms frame is a tone when,
+in the 256 ms of audio centred on it, at least 99% of the energy above 200 Hz sits in the 10
+strongest frequency bins: one or two sharp lines, the way a beep, a dial tone or a ringing tone
+looks. Each run of tone frames is widened by 128 ms on both sides, and tone frames don't count
+as activity. Everything after that is D1-D5 unchanged: tones at the ends are trimmed like
+silence, a window needs 50% activity that isn't tone, and a clip needs 1 s of it or it is *Not
+assessed*. The report gives the seconds left out (`audio.tones_s`) and a `steady_tones` warning
+that says music isn't filtered. `WindowingConfig(skip_tones=False)` turns the gate off. Dylan
+chose "measure first, then a tone gate" on 2026-10-29, from the K1 options (a tone check now, a
+model-based VAD for music later).
+
+**What K1 turned out to be (measured with `eval.k1`, gate off; full tables in
+`eval/results/antideepfake-w2v-large/k1.md`):**
+- **Non-speech on its own gets arbitrary bands.** Generated signals, 12 s each, under all five
+  codecs (test variants): a 600 Hz tone and a UK dial tone are *Likely synthetic* every time; a
+  1400 Hz tone is mostly *Likely genuine*; a busy tone is anything from *Likely genuine* to
+  *Likely synthetic*. Synthetic music is *Likely genuine* every time (score 0.00), which is false
+  reassurance rather than a false alarm. White and pink noise land mostly in *Uncertain*.
+- **On real clips the bigger harm is hidden fakes, not false alarms.** 200 In-the-Wild test
+  clips, each with a sound added, pooled over clean, G.711 and Opus: with nothing added, 80.4% of
+  fakes are rated *Likely synthetic*. A busy tone after the speech drops that to 28.3%, ringing
+  before it to 67.6%, key presses (DTMF) to 55.7%, and synthetic hold music before it to 29.7%.
+  Most In-the-Wild clips are one or two windows long, so the top-3 mean (D6) averages the
+  sound's low-scoring windows in with the speech. Genuine clips rated *Likely synthetic* stayed at
+  0.0-2.1% with every sound.
+
+**Why this gate:**
+- **Long frames separate tones from voices.** Over 256 ms a steady tone stays one sharp line,
+  while a voice's pitch moves and smears its many harmonics across neighbouring bins. In a first
+  sample of 300 dev clips (110,000 frames with sound), the share never reached 0.99 in speech;
+  generated tones, dual tones and DTMF digits all score 0.999 or more. Shorter frames didn't
+  separate them: at 64 ms, 1.6% of speech frames passed 0.99. Over all 4,826 dev clips, 8 had a
+  stretch of 0.20-0.37 s flagged, at 210-285 Hz: most likely a held vowel or an "uhh" at a very
+  steady pitch, mostly in old, band-limited recordings. None of them changed a score.
+- **Above 200 Hz** because the only tone-like stretches found in dev speech were mains hum in
+  the pauses of old recordings (59-62 Hz). Hum's own harmonics above 200 Hz still count, so a
+  clip of nothing but hum is left out too.
+- **Widening by half a frame** because a long frame that straddles a tone's start or end also
+  holds silence or speech, so it reads as less pure than the tone is. Without it, a 0.5 s busy
+  burst would lose half its length to the edges.
+- **Same pattern as D1:** no dependency, no model, no download, and every value can be checked by
+  hand. It adds about 0.4 s to a 60-second clip on CPU (the model takes about 21 s) and under
+  100 MB of memory for a 5-minute clip.
+- **Music is left for later.** It is the case a model-based VAD (Silero) or an AudioSet
+  classifier would be for. That needs a dependency or format decision (D13) and licensed music
+  to test on, both of which are Dylan's calls.
+
+**Impact (measured, test speakers and test signals):**
+- **Fixed:** every steady tone, call-progress tone (dial, ringing, busy, reorder, special
+  information tones), slow DTMF and fax tone is *Not assessed* on its own, under every codec but
+  two (below). On real clips with a beep, ringing or a busy tone added, the gate gives back the
+  original clip's band 97.3-99.5% of the time, with a median score change of 0.0000: fakes
+  caught return from 28.3% (busy tone) and 67.6% (ringing) to 80.4-80.8%.
+- **What it costs on real speech:** over every In-the-Wild test clip (26,953 clean, plus the
+  3,000-clip codec samples), the gate removed 0.03-0.05% of the sound. EER, fakes caught at 1%
+  false positives and genuine clips rated *Likely synthetic* are unchanged to two decimals under
+  every codec. It isn't free, though. 126 clean clips lost a stretch at a voice's pitch
+  (180-310 Hz), mostly from speakers who hold vowels or sing (Alec Guinness, Mr. Rogers, Frank
+  Sinatra), up to 2.2 s in one clip. Four of them were clips under 2 s that fell below the 1 s
+  minimum and became *Not assessed* (14.30% of clips before, 14.32% after), and one of those was
+  a fake that had been *Likely synthetic*. Dev showed the same thing on a smaller scale (8 clips,
+  no band changed), so this is a held-out finding, reported as it is rather than tuned away.
+- **A tone under speech doesn't hide it.** Frames where a voice is heard over a tone or hum
+  aren't a single sharp line, so they stay in. With a tone 20 dB under the speech, a clip's
+  speech time was at most 0.28 s shorter than without the tone, and no shorter at all in 95% of
+  clips.
+- **Not fixed:**
+  - **Fast DTMF** (80-100 ms digits): a 256 ms frame spans several digits and gaps, which
+    blurs the lines. Fakes after 4 s of key presses are still caught only 55.7% of the time.
+  - **Music:** synthetic hold music before a fake still drops detection to 29.7%, and music
+    15 dB under the speech to 46.1%. Real music is unmeasured.
+  - **Noise, sweeps and other sounds** are scored as before.
+  - **Two codec misses:** a 2100 Hz fax answer tone under AMR-NB and 50 Hz hum under Opus. Both
+    codecs smear a pure tone enough that it no longer reads as one line.
+- **More *Not assessed* clips** where the only sound was a tone: they never had speech to judge.
+
+**Revisit:** when music is tackled (a model-based VAD would replace this check, or sit beside
+it); if held vowels and singing matter (for example, AI-generated songs), with a rule chosen on
+dev data only; if fast DTMF matters on real recordings, a DTMF detector at the standard frequencies (the
+method telephone exchanges use, designed not to fire on speech); and on real voicemails, which
+nothing here is.
+
 ## Known gaps
 
 ### K1. Non-speech audio gets confident "fake" scores (found in step 5)
@@ -886,9 +970,15 @@ is false positives on real voicemails.
 **Options:** a speech-versus-non-speech check before scoring (a model-based VAD, or a simple
 tonality or music detector), or excluding windows that look tonal.
 
-**Status:** open. Not measured in Phase 2 (In-the-Wild has no tones or music to test with). A
-synthetic 300 Hz tone sent through the CLI after Phase 2 still scored 1.00, *Likely
-synthetic*. Fix it before any claim that squeaktest is ready for SOC use.
+**Measured (2026-10-29, `eval.k1`, details in D31):** non-speech gets arbitrary bands, not
+always "fake": some tones are *Likely synthetic* every time, synthetic music is *Likely
+genuine* every time. On real clips the bigger harm turned out to be hidden fakes: a busy tone
+after a fake drops detection from 80.4% to 28.3%, synthetic hold music before it to 29.7%.
+
+**Status:** partly fixed. Steady tones (beeps, dial, ringing, busy and fax tones, slow DTMF) are
+left out of scoring by the tone gate (D31). Still open: music, fast DTMF, noise, and two codec
+cases the gate misses. Real voicemails haven't been tested. Music is the remaining blocker
+before any claim that squeaktest is ready for SOC use.
 
 ### K2. Opus voice notes and VoIP audio cause false alarms (found in Phase 2)
 

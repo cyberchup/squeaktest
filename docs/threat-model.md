@@ -420,9 +420,15 @@ answer. The full analysis is planned for Phase 5. Known so far:
 - **Missed fakes.** On deepfakes that circulated in 2024, NII reports 33% EER for these weights.
   Opus voice notes are the weakest condition squeaktest measured (README, Known gaps). An
   attacker who knows this can choose a generator or a channel that scores *Likely genuine*.
-- **Genuine audio made to look fake.** Tones and music can score as confidently synthetic (K1).
-  Padding a genuine recording with hold music could push it towards *Likely synthetic* and
-  discredit real evidence. *Not measured.*
+- **A fake hidden behind other sounds** (K1, measured 2026-10-29 on generated sounds). On short
+  clips the top-3 mean averages in whatever else is in the recording, and the model scores most
+  non-speech low. A busy tone after a fake cut detection from 80% to 28%, synthetic hold music
+  before it to 30%. The tone gate (D31) undoes this for steady tones, but an attacker can still
+  pad a fake with music or fast key presses. Silence doesn't work, because it is trimmed (D2).
+- **Genuine audio made to look fake.** Some tones score as confidently synthetic (K1), but with
+  the tone gate they are no longer scored. Adding sounds to the genuine clips among 200 test
+  clips never put more than 2.1% of them in *Likely synthetic*, against 1.0% with nothing
+  added. Real music is *not measured*.
 - **Treating the band as a verdict.** Every result carries a disclaimer, the score is labelled
   as uncalibrated, and Opus files get a warning. None of that stops an analyst trusting it too
   much; how the result is used is up to the SOC's process.

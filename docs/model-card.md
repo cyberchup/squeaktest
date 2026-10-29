@@ -136,8 +136,13 @@ hardest), and it scores 4-second windows rather than whole clips. On dev speaker
 - **Opus audio causes false alarms** ([K2](decisions.md)). See the tables above. squeaktest
   warns when the file itself is Opus, but can't tell when audio was Opus before being converted.
 - **Very short clips are less reliable** ([K3](decisions.md)): 5.1% EER under 2 seconds.
-- **Non-speech audio** such as tones, beeps and hold music can score as confidently synthetic
-  ([K1](decisions.md)). This is not measured, and still open.
+- **Non-speech audio gets arbitrary scores** ([K1](decisions.md)), and on short clips it can
+  hide a fake: in testing, synthetic hold music before a fake cut detection from 80% to 30%.
+  Steady tones (beeps, dial, ringing and busy tones) are left out of scoring by squeaktest's
+  tone gate ([D31](decisions.md)); music, fast DTMF and noise are not. Measured on generated
+  sounds only, not on real voicemails. The gate sometimes takes a held vowel or a sung note for
+  a tone; on In-the-Wild test speakers that made 4 of 26,953 clips *Not assessed* and changed
+  nothing else.
 - **The codec conditions are simulations:** one encode pass, with no packet loss, line noise
   or echo cancellation. Real calls may do worse.
 - **Partial fakes are untested.** In-the-Wild's fakes are whole clips. A cloned sentence spliced
