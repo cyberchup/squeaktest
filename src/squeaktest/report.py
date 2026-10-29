@@ -35,6 +35,16 @@ OPUS_WARNING = (
     "audio would be false alarms. Higher bitrates were not tested. See docs/decisions.md K2."
 )
 
+
+def tones_warning(tones_s: float) -> str:
+    return (
+        f"{tones_s:.1f} s of steady tones (such as beeps, or dial, ringing or busy tones) were "
+        "left out of scoring, because the model gives tones meaningless scores. Music and other "
+        "non-speech sounds are not filtered and can still move the score. See docs/decisions.md "
+        "K1."
+    )
+
+
 BAND_LABELS = {
     "likely_synthetic": "Likely synthetic",
     "uncertain": "Uncertain",
@@ -55,6 +65,8 @@ def build_report(
     warnings = []
     if audio.codec == "opus":
         warnings.append({"code": "opus_audio", "message": OPUS_WARNING})
+    if result.tones_s > 0:
+        warnings.append({"code": "steady_tones", "message": tones_warning(result.tones_s)})
     return {
         "band": band_for(result.score, spec.bands),
         "score": _round(result.score),
@@ -67,7 +79,9 @@ def build_report(
         },
         "audio": {
             "duration_s": round(audio.duration_s, 3),
-            "active_s": round(result.speech_s, 3),  # with sound: VAD cannot tell speech apart
+            # With sound, not counting steady tones: the VAD can't tell speech from music.
+            "active_s": round(result.speech_s, 3),
+            "tones_s": round(result.tones_s, 3),  # steady tones, left out of scoring
             "container": audio.container,
             "codec": audio.codec,
         },
@@ -103,6 +117,7 @@ def format_report(report: dict[str, Any]) -> str:
     lines.append(
         f"Audio:    {audio['duration_s']:.1f} s, {audio['container']}/{audio['codec']}, "
         f"{audio['active_s']:.1f} s with sound"
+        + (f", {audio['tones_s']:.1f} s of tones left out" if audio["tones_s"] else "")
     )
     for warning in report["warnings"]:
         wrapped = textwrap.wrap(warning["message"], width=80)
@@ -110,7 +125,8 @@ def format_report(report: dict[str, Any]) -> str:
     windows = report["windows"]
     if windows:
         scored = sum(w["score"] is not None for w in windows)
-        lines.append(f"Windows:  {scored} scored, {len(windows) - scored} skipped (mostly silence)")
+        skipped = len(windows) - scored
+        lines.append(f"Windows:  {scored} scored, {skipped} skipped (mostly silence or tones)")
         lines += ["", *_timeline(windows, report["windowing"])]
 
     model = report["model"]
@@ -141,7 +157,7 @@ def _timeline(windows: list[dict[str, Any]], windowing: dict[str, Any]) -> list[
     for w in shown:
         span = f"{w['start_s']:6.1f} - {w['end_s']:6.1f} s"
         if w["score"] is None:
-            rows.append(f"  {span}  {'':20}  (mostly silence, not scored)")
+            rows.append(f"  {span}  {'':20}  (mostly silence or tones, not scored)")
             continue
         bar = "#" * round(w["score"] * 20)
         marker = "  <- most suspicious" if w is peak else ""

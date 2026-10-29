@@ -41,7 +41,7 @@ from eval.degrade import CONDITIONS, degrade
 from squeaktest import __version__
 from squeaktest.audio import AudioError, load_audio_file
 from squeaktest.config import Settings
-from squeaktest.inference import WindowingConfig, plan_windows
+from squeaktest.inference import WindowingConfig, find_tones, plan_windows
 from squeaktest.vad import speech_fraction
 
 
@@ -67,8 +67,9 @@ def prepare(clip: Clip, condition: str, settings: Settings, config: WindowingCon
         return result
     sr = audio.sample_rate
     result.duration_s = audio.duration_s
-    result.active_s = speech_fraction(audio.samples, sr) * audio.samples.size / sr
-    for w in plan_windows(audio.samples, sr, config):
+    tones = find_tones(audio.samples, sr, config)
+    result.active_s = speech_fraction(audio.samples, sr, exclude=tones) * audio.samples.size / sr
+    for w in plan_windows(audio.samples, sr, config, tones):
         scoreable = w.speech_fraction >= config.min_speech_fraction
         result.windows.append((w.start / sr, w.end / sr, w.speech_fraction, scoreable))
         if scoreable:

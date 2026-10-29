@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import FFMPEG, HAVE_FFMPEG
+from conftest import FFMPEG, HAVE_FFMPEG, harmonic_tone
 
 from eval.datasets import (
     ITW_DEV_SPEAKERS,
@@ -94,7 +94,7 @@ def speechlike_wav(tmp_path_factory: pytest.TempPathFactory) -> Path:
     if HAVE_FFMPEG:
         subprocess.run(
             [FFMPEG, "-nostdin", "-loglevel", "error", "-f", "lavfi",
-             "-i", "sine=frequency=300:sample_rate=16000:duration=3", "-y", str(path)],
+             "-i", harmonic_tone(300, 3, 16000), "-y", str(path)],
             check=True,
         )  # fmt: skip
     return path
@@ -149,7 +149,7 @@ def test_runner_scores_every_window_records_errors_and_resumes(tmp_path: Path):
         path = tmp_path / f"tone{i}.wav"
         subprocess.run(
             [FFMPEG, "-nostdin", "-loglevel", "error", "-f", "lavfi",
-             "-i", f"sine=frequency=300:duration={seconds}", "-y", str(path)],
+             "-i", harmonic_tone(300, seconds), "-y", str(path)],
             check=True,
         )  # fmt: skip
         clips.append(Clip(path.name, path, i % 2, "spk"))

@@ -2,7 +2,9 @@
 
 A toy scorer stands in for the model: 440 Hz tones play "real speech" and 880 Hz tones play
 "synthetic speech", and the scorer reports the share of a window's energy at 880 Hz. That
-makes the effects of the windowing and aggregation choices visible in plain numbers.
+makes the effects of the windowing and aggregation choices visible in plain numbers. Steady
+tones are what the tone gate (D31) removes, so these tests turn it off with NO_GATE; the gate's
+own tests are at the end.
 """
 
 from __future__ import annotations
@@ -25,6 +27,7 @@ from squeaktest.inference import (
 SR = 16_000
 REAL_HZ = 440.0
 FAKE_HZ = 880.0
+NO_GATE = WindowingConfig(skip_tones=False)
 
 
 def tone(seconds: float, hz: float = REAL_HZ, amplitude: float = 0.3) -> np.ndarray:
@@ -60,7 +63,7 @@ def toy_scorer(windows: Sequence[np.ndarray]) -> list[float]:
 
 
 def test_windows_cover_the_whole_speech_span_without_gaps():
-    windows = plan_windows(tone(10.0), SR)
+    windows = plan_windows(tone(10.0), SR, NO_GATE)
     window, hop = 4 * SR, 2 * SR
     assert windows[0].start == 0
     for prev, nxt in pairwise(windows):
@@ -75,35 +78,35 @@ def test_windows_cover_the_whole_speech_span_without_gaps():
 def test_an_end_aligned_window_covers_the_tail():
     # 10 s doesn't divide into 4 s windows every 2 s, so without an extra window aligned to
     # the end, the last seconds would never be scored.
-    windows = plan_windows(tone(10.0), SR)
+    windows = plan_windows(tone(10.0), SR, NO_GATE)
     on_grid = [w for w in windows if w.start % (2 * SR) == 0]
     assert on_grid[-1].end < 9 * SR  # the regular 2 s grid stops at 8 s...
     assert windows[-1].end > 9.9 * SR  # ...so an extra end-aligned window covers the rest
 
 
 def test_a_clip_shorter_than_one_window_gets_a_single_window():
-    windows = plan_windows(tone(3.0), SR)
+    windows = plan_windows(tone(3.0), SR, NO_GATE)
     assert len(windows) == 1
     assert windows[0].start == 0
     assert windows[0].end == pytest.approx(3 * SR, abs=400)
 
 
 def test_leading_and_trailing_silence_are_trimmed_before_windowing():
-    windows = plan_windows(clip(silence(1.0), tone(6.0), silence(1.0)), SR)
+    windows = plan_windows(clip(silence(1.0), tone(6.0), silence(1.0)), SR, NO_GATE)
     assert abs(windows[0].start - 1 * SR) <= 400
     assert abs(windows[-1].end - 7 * SR) <= 400
 
 
 def test_silence_gives_no_windows():
-    assert plan_windows(silence(5.0), SR) == []
+    assert plan_windows(silence(5.0), SR, NO_GATE) == []
 
 
 def test_too_little_speech_gives_no_windows():
-    assert plan_windows(clip(silence(2.0), tone(0.5), silence(2.0)), SR) == []
+    assert plan_windows(clip(silence(2.0), tone(0.5), silence(2.0)), SR, NO_GATE) == []
 
 
 def test_windows_carry_their_speech_fraction():
-    windows = plan_windows(clip(tone(4.0), silence(8.0), tone(4.0)), SR)
+    windows = plan_windows(clip(tone(4.0), silence(8.0), tone(4.0)), SR, NO_GATE)
     fractions = [w.speech_fraction for w in windows]
     assert max(fractions) == pytest.approx(1.0)
     assert min(fractions) == pytest.approx(0.0, abs=0.01)  # a window inside the pause
@@ -152,9 +155,9 @@ def test_top_k_must_be_positive():
 def test_partial_fake_is_caught_by_top_k_but_diluted_by_the_mean():
     # 10 s real, 4 s synthetic, 10 s real: a cloned sentence spliced into a real call.
     audio = clip(tone(10.0), tone(4.0, FAKE_HZ), tone(10.0))
-    result_top3 = analyze(audio, SR, toy_scorer)
-    result_mean = analyze(audio, SR, toy_scorer, WindowingConfig(top_k=1000))
-    result_max = analyze(audio, SR, toy_scorer, WindowingConfig(top_k=1))
+    result_top3 = analyze(audio, SR, toy_scorer, NO_GATE)
+    result_mean = analyze(audio, SR, toy_scorer, WindowingConfig(top_k=1000, skip_tones=False))
+    result_max = analyze(audio, SR, toy_scorer, WindowingConfig(top_k=1, skip_tones=False))
     assert result_mean.score is not None and result_mean.score < 0.25
     assert result_top3.score is not None and result_top3.score > 0.6
     assert result_max.score is not None and result_max.score > 0.95
@@ -162,15 +165,16 @@ def test_partial_fake_is_caught_by_top_k_but_diluted_by_the_mean():
 
 def test_window_scores_locate_the_fake_on_the_timeline():
     audio = clip(tone(10.0), tone(4.0, FAKE_HZ), tone(10.0))
-    result = analyze(audio, SR, toy_scorer)
+    result = analyze(audio, SR, toy_scorer, NO_GATE)
     peak = max(result.windows, key=lambda w: w.score or 0.0)
     assert peak.start_s == pytest.approx(10.0)
     assert peak.end_s == pytest.approx(14.0)
 
 
 def test_fully_synthetic_and_fully_real_clips():
-    assert analyze(tone(8.0, FAKE_HZ), SR, toy_scorer).score == pytest.approx(1.0, abs=0.01)
-    assert analyze(tone(8.0), SR, toy_scorer).score == pytest.approx(0.0, abs=0.01)
+    fake = analyze(tone(8.0, FAKE_HZ), SR, toy_scorer, NO_GATE)
+    assert fake.score == pytest.approx(1.0, abs=0.01)
+    assert analyze(tone(8.0), SR, toy_scorer, NO_GATE).score == pytest.approx(0.0, abs=0.01)
 
 
 def test_mostly_silent_windows_are_skipped_not_scored():
@@ -181,7 +185,7 @@ def test_mostly_silent_windows_are_skipped_not_scored():
         calls.append(len(windows))
         return [0.3] * len(windows)
 
-    result = analyze(audio, SR, scorer)
+    result = analyze(audio, SR, scorer, NO_GATE)
     skipped = [w for w in result.windows if w.score is None]
     scored = [w for w in result.windows if w.score is not None]
     assert skipped and scored
@@ -191,7 +195,7 @@ def test_mostly_silent_windows_are_skipped_not_scored():
 
 
 def test_too_little_speech_gives_no_score_and_says_why():
-    result = analyze(clip(silence(2.0), tone(0.5), silence(2.0)), SR, toy_scorer)
+    result = analyze(clip(silence(2.0), tone(0.5), silence(2.0)), SR, toy_scorer, NO_GATE)
     assert result.score is None
     assert result.windows == ()
     assert result.note is not None and "not enough" in result.note
@@ -202,19 +206,19 @@ def test_sparse_sound_gives_no_score_when_every_window_is_mostly_silent():
     # more than about 10% active, so nothing gets scored.
     burst, gap = tone(0.1), silence(0.9)
     audio = clip(*([burst, gap] * 20))
-    result = analyze(audio, SR, toy_scorer, WindowingConfig(min_speech_s=1.0))
+    result = analyze(audio, SR, toy_scorer, WindowingConfig(min_speech_s=1.0, skip_tones=False))
     assert result.score is None
     assert result.windows and all(w.score is None for w in result.windows)
     assert result.note is not None and "mostly silence" in result.note
 
 
 def test_speech_seconds_are_reported():
-    result = analyze(clip(silence(1.0), tone(5.0), silence(1.0)), SR, toy_scorer)
+    result = analyze(clip(silence(1.0), tone(5.0), silence(1.0)), SR, toy_scorer, NO_GATE)
     assert result.speech_s == pytest.approx(5.0, abs=0.05)
 
 
 def test_timeline_is_in_clip_seconds_and_in_order():
-    result = analyze(clip(silence(1.0), tone(9.0)), SR, toy_scorer)
+    result = analyze(clip(silence(1.0), tone(9.0)), SR, toy_scorer, NO_GATE)
     starts = [w.start_s for w in result.windows]
     assert starts == sorted(starts)
     assert starts[0] == pytest.approx(1.0, abs=0.03)
@@ -238,7 +242,7 @@ def test_bad_scorer_output_is_rejected(bad_output):
         return bad_output(len(windows))
 
     with pytest.raises(ValueError, match="scorer returned"):
-        analyze(tone(8.0), SR, scorer)
+        analyze(tone(8.0), SR, scorer, NO_GATE)
 
 
 # --- Config ------------------------------------------------------------------------------
@@ -292,3 +296,45 @@ def test_equal_thresholds_leave_no_uncertain_band():
 def test_band_thresholds_must_be_ordered_and_in_range(synthetic_at, genuine_below):
     with pytest.raises(ValueError):
         BandThresholds(likely_synthetic_at=synthetic_at, likely_genuine_below=genuine_below)
+
+
+# --- The tone gate (D31) -----------------------------------------------------------------
+
+
+def voice_like(seconds: float, hz: float = 100.0) -> np.ndarray:
+    """Seven harmonics with a moving pitch: what the gate must keep. None of them reaches the
+    toy scorer's 880 Hz, so it scores as genuine, and any fake score below comes from a beep."""
+    t = np.arange(round(seconds * SR)) / SR
+    phase = 2 * np.pi * np.cumsum(hz * (1 + 0.05 * np.sin(2 * np.pi * 3 * t))) / SR
+    x = sum(np.sin(h * phase) / h for h in range(1, 8))
+    return (0.3 * x / np.abs(x).max()).astype(np.float32)
+
+
+def test_the_gate_is_on_by_default():
+    assert WindowingConfig().skip_tones
+
+
+def test_a_clip_of_only_tones_is_not_assessed():
+    result = analyze(tone(10.0, FAKE_HZ), SR, toy_scorer)
+    assert result.score is None
+    assert result.windows == ()
+    assert "steady tones" in result.note
+    assert result.tones_s == pytest.approx(10.0, abs=0.1)
+    assert result.speech_s == 0.0
+
+
+def test_a_beep_before_speech_is_left_out():
+    audio = clip(tone(1.0, FAKE_HZ), silence(0.5), voice_like(8.0))
+    gated = analyze(audio, SR, toy_scorer)
+    ungated = analyze(audio, SR, toy_scorer, NO_GATE)
+    assert gated.windows[0].start_s >= 1.0  # trimmed off with the leading silence
+    assert gated.score == pytest.approx(0.0, abs=0.01)
+    assert ungated.score > 0.2  # the beep's window raises the top-3 mean
+    assert gated.tones_s == pytest.approx(1.0, abs=0.05)
+
+
+def test_the_gate_changes_nothing_without_tones():
+    audio = clip(silence(1.0), voice_like(9.0), silence(1.0))
+    gated, ungated = analyze(audio, SR, toy_scorer), analyze(audio, SR, toy_scorer, NO_GATE)
+    assert gated == ungated
+    assert gated.tones_s == 0.0

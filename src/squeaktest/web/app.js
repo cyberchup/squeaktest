@@ -98,7 +98,8 @@ function showResult(report) {
   const audio = report.audio;
   $("audio-line").textContent =
     audio.duration_s.toFixed(1) + " s of audio (" + audio.container + "/" + audio.codec + "), " +
-    audio.active_s.toFixed(1) + " s with sound.";
+    audio.active_s.toFixed(1) + " s with sound" +
+    (audio.tones_s ? ", " + audio.tones_s.toFixed(1) + " s of steady tones left out." : ".");
 
   const warnings = $("warnings");
   warnings.replaceChildren();
@@ -130,7 +131,7 @@ function drawTimeline(report) {
   if (report.windows.length === 0) {
     const p = document.createElement("p");
     p.className = "hint";
-    p.textContent = "No windows to show: the clip had too little sound.";
+    p.textContent = "No windows to show: " + report.note + ".";
     container.append(p);
     return;
   }
@@ -178,7 +179,7 @@ function drawTimeline(report) {
     }, chart);
     svg("title", {}, bar).textContent = scored
       ? `${w.start_s.toFixed(1)}-${w.end_s.toFixed(1)} s: score ${w.score.toFixed(2)}`
-      : `${w.start_s.toFixed(1)}-${w.end_s.toFixed(1)} s: mostly silence, not scored`;
+      : `${w.start_s.toFixed(1)}-${w.end_s.toFixed(1)} s: mostly silence or tones, not scored`;
   });
 
   svg("line", { class: "axis", x1: left, x2: width - right, y1: y(0), y2: y(0) }, chart);

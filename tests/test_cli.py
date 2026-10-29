@@ -191,6 +191,26 @@ def test_too_little_sound_is_not_assessed(fake_model, capsys, tmp_path: Path):
     assert "not enough" in report["note"]
 
 
+def test_steady_tones_are_left_out_with_a_warning(fake_model, capsys, tmp_path: Path):
+    import wave
+
+    t = np.arange(16_000 * 4) / 16_000
+    dial_tone = 0.2 * (np.sin(2 * np.pi * 350 * t) + np.sin(2 * np.pi * 440 * t))
+    path = tmp_path / "dial.wav"
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16_000)
+        w.writeframes((dial_tone * 32767).astype("<i2").tobytes())
+    fake_model(0.99)  # what the model would say about a tone (K1)
+    assert main(["analyze", str(path), "--json"]) == EXIT_OK
+    report = json.loads(capsys.readouterr().out)
+    assert report["band"] == "not_assessed"
+    assert "steady tones" in report["note"]
+    assert report["audio"]["tones_s"] == pytest.approx(4.0, abs=0.1)
+    assert [w["code"] for w in report["warnings"]] == ["steady_tones"]
+
+
 def test_missing_model_exits_2_and_says_how_to_fetch_it(
     audio_fixtures: dict[str, Path], monkeypatch, capsys
 ):
@@ -211,7 +231,7 @@ def test_cuda_requested_without_a_gpu_exits_2(audio_fixtures: dict[str, Path], m
 
 
 def test_long_clips_show_only_the_most_suspicious_windows(fake_model, capsys, tmp_path: Path):
-    from conftest import FFMPEG
+    from conftest import FFMPEG, harmonic_tone
 
     if FFMPEG is None:
         pytest.skip("ffmpeg needed")
@@ -220,7 +240,7 @@ def test_long_clips_show_only_the_most_suspicious_windows(fake_model, capsys, tm
     long_clip = tmp_path / "long.flac"
     subprocess.run(
         [FFMPEG, "-nostdin", "-loglevel", "error", "-f", "lavfi",
-         "-i", "sine=frequency=440:duration=80", "-y", str(long_clip)],
+         "-i", harmonic_tone(440, 80), "-y", str(long_clip)],
         check=True,
     )  # fmt: skip
     fake_model(0.3)

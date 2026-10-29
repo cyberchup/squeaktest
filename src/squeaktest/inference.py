@@ -3,12 +3,13 @@
 The pipeline:
 
 1. Trim leading and trailing silence (vad.speech_bounds). Silence length is a known shortcut
-   for detectors, so it never reaches the model.
+   for detectors, so it never reaches the model. Steady tones (beeps, dial, ringing and busy
+   tones) count as silence here and below, unless `skip_tones` is off (D31).
 2. Refuse to score clips with less than `min_speech_s` of activity. A number computed from
    half a second of audio would look as confident as any other, and wouldn't deserve to.
 3. Cut the trimmed span into windows of `window_s`, starting every `hop_s`. If the windows
    don't reach the end, add one more window aligned to the end, so no audio goes unscored.
-4. Skip windows that are mostly silent (speech fraction below `min_speech_fraction`).
+4. Skip windows that are mostly silent or tones (speech fraction below `min_speech_fraction`).
 5. Score the remaining windows in one batch, then combine the scores with a top-k mean.
 
 The reasons behind each default, and their effect on missed fakes, false positives and cost,
@@ -24,7 +25,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from squeaktest.vad import speech_bounds, speech_fraction
+from squeaktest.vad import speech_bounds, speech_fraction, tone_mask
 
 # A window scorer takes a batch of mono sample arrays and returns one score per window, each
 # in [0, 1], where higher means more likely synthetic. Batching lets a model run them together.
@@ -67,6 +68,7 @@ class WindowingConfig:
     min_speech_fraction: float = 0.5
     min_speech_s: float = 1.0
     top_k: int = 3
+    skip_tones: bool = True  # leave steady tones out of the activity count (K1, D31)
 
     def __post_init__(self) -> None:
         if not (math.isfinite(self.window_s) and self.window_s > 0):
@@ -103,20 +105,38 @@ class WindowResult:
 class ClipResult:
     score: float | None  # None when the clip had too little speech to score
     windows: tuple[WindowResult, ...]
-    speech_s: float  # seconds of detected activity
+    speech_s: float  # seconds of detected activity, not counting steady tones
     note: str | None = None  # why there is no score, when there isn't one
+    tones_s: float = 0.0  # seconds of sound left out as steady tones
+
+
+def find_tones(
+    samples: np.ndarray, sample_rate: int, config: WindowingConfig | None = None
+) -> np.ndarray | None:
+    """The per-sample tone mask the config asks for, or None when tones aren't skipped."""
+    config = config or WindowingConfig()
+    return tone_mask(samples, sample_rate) if config.skip_tones else None
 
 
 def plan_windows(
-    samples: np.ndarray, sample_rate: int, config: WindowingConfig | None = None
+    samples: np.ndarray,
+    sample_rate: int,
+    config: WindowingConfig | None = None,
+    tones: np.ndarray | None = None,
 ) -> list[Window]:
-    """Return the windows to consider, in clip order. Empty if there's too little speech."""
+    """Return the windows to consider, in clip order. Empty if there's too little speech.
+
+    `tones` is find_tones' mask, when the caller already has it; otherwise it is computed here.
+    """
     config = config or WindowingConfig()
-    bounds = speech_bounds(samples, sample_rate)
+    if tones is None:
+        tones = find_tones(samples, sample_rate, config)
+    bounds = speech_bounds(samples, sample_rate, exclude=tones)
     if bounds is None:
         return []
     span_start, span_end = bounds
-    if _active_seconds(samples[span_start:span_end], sample_rate) < config.min_speech_s:
+    span_tones = None if tones is None else tones[span_start:span_end]
+    if _active_seconds(samples[span_start:span_end], sample_rate, span_tones) < config.min_speech_s:
         return []
 
     window = round(config.window_s * sample_rate)
@@ -132,7 +152,9 @@ def plan_windows(
     windows = []
     for start in starts:
         end = min(start + window, span_end)
-        windows.append(Window(start, end, speech_fraction(samples[start:end], sample_rate)))
+        window_tones = None if tones is None else tones[start:end]
+        fraction = speech_fraction(samples[start:end], sample_rate, exclude=window_tones)
+        windows.append(Window(start, end, fraction))
     return windows
 
 
@@ -160,23 +182,29 @@ def analyze(
 ) -> ClipResult:
     """Window the clip, score the windows that contain speech, and aggregate."""
     config = config or WindowingConfig()
-    windows = plan_windows(samples, sample_rate, config)
-    speech_s = _active_seconds(samples, sample_rate)
+    tones = find_tones(samples, sample_rate, config)
+    windows = plan_windows(samples, sample_rate, config, tones)
+    speech_s = _active_seconds(samples, sample_rate, tones)
+    tones_s = 0.0 if tones is None else _active_seconds(samples, sample_rate) - speech_s
     if not windows:
+        sound = "of sound other than steady tones" if tones_s > 0 else "with sound"
         return ClipResult(
             score=None,
             windows=(),
             speech_s=speech_s,
-            note=f"less than {config.min_speech_s:g} s with sound; not enough to score",
+            note=f"less than {config.min_speech_s:g} s {sound}; not enough to score",
+            tones_s=tones_s,
         )
 
     scoreable = [w for w in windows if w.speech_fraction >= config.min_speech_fraction]
     if not scoreable:
+        quiet = "silence or steady tones" if tones_s > 0 else "silence"
         return ClipResult(
             score=None,
             windows=tuple(_result(w, sample_rate, None) for w in windows),
             speech_s=speech_s,
-            note="every window was mostly silence; not enough to score",
+            note=f"every window was mostly {quiet}; not enough to score",
+            tones_s=tones_s,
         )
 
     scores = _checked_scores(scorer([samples[w.start : w.end] for w in scoreable]), scoreable)
@@ -185,6 +213,7 @@ def analyze(
         score=aggregate(scores, config.top_k),
         windows=tuple(_result(w, sample_rate, score_of.get(w)) for w in windows),
         speech_s=speech_s,
+        tones_s=tones_s,
     )
 
 
@@ -208,5 +237,7 @@ def _result(window: Window, sample_rate: int, score: float | None) -> WindowResu
     )
 
 
-def _active_seconds(samples: np.ndarray, sample_rate: int) -> float:
-    return speech_fraction(samples, sample_rate) * samples.size / sample_rate
+def _active_seconds(
+    samples: np.ndarray, sample_rate: int, tones: np.ndarray | None = None
+) -> float:
+    return speech_fraction(samples, sample_rate, exclude=tones) * samples.size / sample_rate
